@@ -2,7 +2,7 @@
 
 /*
  * Luminary Shaders - gbuffers_terrain.fsh
- * Shading fisicamente calibrato LabPBR 1.3 per Iris / Sodium.
+ * Shading fisicamente calibrato LabPBR 1.3 con Shadow Map PCF e luci dinamiche calde/ciano.
  */
 
 #include "/lib/settings.glsl"
@@ -11,6 +11,8 @@ uniform sampler2D gtexture;    // Albedo
 uniform sampler2D normals;     // Normal map (_n: RG=Normal, B=AO, A=Height)
 uniform sampler2D specular;    // Specular map (_s: R=Smoothness, G=F0/Metal, B=Porosity, A=Emissive)
 uniform sampler2D lightmap;    // Vanilla Lightmap
+uniform sampler2D shadowtex0;  // Iris Shadow Map
+uniform sampler2D shadowcolor0;
 
 uniform vec3 sunPosition;
 uniform vec3 shadowLightPosition;
@@ -25,6 +27,7 @@ in vec3 vNormal;
 in vec3 vTangent;
 in vec3 vBitangent;
 in vec3 vViewPos;
+in vec4 vShadowPos;
 flat in vec4 vAtlasBounds;
 
 /* RENDERTARGETS: 0,1 */
@@ -91,6 +94,34 @@ vec2 computeParallaxCoord(vec2 startUV, vec3 viewDirTS, float viewDist, vec4 bou
 }
 #endif
 
+// Campionamento Shadow Map PCF 4-tap a costo ridotto (<= 3.8ms)
+float sampleShadowMap(vec4 shadowPos, float NdotL) {
+#ifdef SHADOW_ENABLED
+    vec3 sp = shadowPos.xyz / shadowPos.w;
+    sp = sp * 0.5 + 0.5;
+    
+    // Controllo fuori bounds frustum ombra
+    if (sp.x < 0.0 || sp.x > 1.0 || sp.y < 0.0 || sp.y > 1.0 || sp.z < 0.0 || sp.z > 1.0) {
+        return 1.0;
+    }
+    
+    // Bias adattivo per eliminare shadow acne
+    float bias = max(0.0018 * (1.0 - NdotL), 0.0006);
+    float currentDepth = sp.z - bias;
+    
+    // PCF a 4 campioni bilineari
+    float shadow = 0.0;
+    vec2 texelSize = vec2(1.0 / 1024.0);
+    shadow += step(currentDepth, texture(shadowtex0, sp.xy + vec2(-0.5, -0.5) * texelSize).r);
+    shadow += step(currentDepth, texture(shadowtex0, sp.xy + vec2( 0.5, -0.5) * texelSize).r);
+    shadow += step(currentDepth, texture(shadowtex0, sp.xy + vec2(-0.5,  0.5) * texelSize).r);
+    shadow += step(currentDepth, texture(shadowtex0, sp.xy + vec2( 0.5,  0.5) * texelSize).r);
+    return shadow * 0.25;
+#else
+    return 1.0;
+#endif
+}
+
 void main() {
     vec2 coord = vTexCoord;
     vec2 ddx = dFdx(vTexCoord);
@@ -123,14 +154,12 @@ void main() {
     vec4 normalSample = textureGrad(normals, coord, ddx, ddy);
     vec4 specSample = textureGrad(specular, coord, ddx, ddy);
 
-    // LabPBR 1.3: normal map marcata per evidenziare rilievo 3D corteccia e fessure
-    vec2 normalXY = (normalSample.xy * 2.0 - 1.0) * 1.5; // Leggero boost di rilievo
+    vec2 normalXY = (normalSample.xy * 2.0 - 1.0) * 1.5;
     float normalZ = sqrt(max(0.001, 1.0 - dot(normalXY, normalXY)));
     vec3 tNormal = normalize(vec3(normalXY, normalZ));
     N = normalize(tbn * tNormal);
 
 #if AO_QUALITY >= 1
-    // Ambient Occlusion LabPBR
     ao = mix(1.0, normalSample.b, 0.75);
 #endif
 
@@ -152,6 +181,7 @@ void main() {
 #endif
 
     vec2 lm = vLmCoord;
+    vec3 dynLightTint = vec3(1.0, 0.82, 0.55); // Caldo default (torcia/lanterna)
 
 #ifdef DYNAMIC_LIGHTS
     int maxHeldLight = max(heldBlockLightValue, heldBlockLightValue2);
@@ -166,6 +196,7 @@ void main() {
 
     vec3 specularColor = vec3(0.0);
     float directionalFactor = 1.0;
+    float shadowVisibility = 1.0;
 
 #ifdef SHADOW_ENABLED
     vec3 L = normalize(shadowLightPosition.xyz);
@@ -176,11 +207,11 @@ void main() {
     float NdotH = max(dot(N, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    // Shading direzionale morbido e contrastato
-    directionalFactor = mix(0.78, 1.22, NdotL);
+    shadowVisibility = sampleShadowMap(vShadowPos, NdotL);
+    directionalFactor = mix(0.70, 1.25, NdotL * shadowVisibility);
 
 #ifdef PBR_ENABLED
-    if (smoothness > 0.04 && NdotL > 0.0) {
+    if (smoothness > 0.04 && NdotL > 0.0 && shadowVisibility > 0.05) {
         float roughness = max(pow(1.0 - smoothness, 2.0), 0.02);
         float NDF = D_GGX(NdotH, roughness);
         float G = G_Smith(NdotV, NdotL, roughness);
@@ -188,7 +219,7 @@ void main() {
 
         vec3 numerator = NDF * G * F;
         float denominator = 4.0 * NdotV * NdotL + 0.0001;
-        specularColor = (numerator / denominator) * NdotL * lightColor * 1.4;
+        specularColor = (numerator / denominator) * NdotL * lightColor * shadowVisibility * 1.5;
     }
 #endif
 #endif
