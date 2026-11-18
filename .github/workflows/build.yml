@@ -22,6 +22,9 @@ jobs:
       - name: Run LabPBR 1.3 Texture Validator
         run: python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict
 
+      - name: Run Python Release & Packager Tests
+        run: python -m unittest discover -s tests -v
+
   build-mods:
     name: Build Ambient Luminescence (MC 1.21.1)
     runs-on: ubuntu-latest
