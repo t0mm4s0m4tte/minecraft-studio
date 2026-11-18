@@ -1,0 +1,18 @@
+profile.Potato=Potato (Massimi FPS)
+profile.Balanced=Balanced LabPBR (Target <= 3.8ms)
+profile.Cinematic=Cinematic (POM + Micro-AO)
+
+option.PBR_ENABLED=Materiali LabPBR 1.3
+option.PBR_ENABLED.comment=Abilita normal map tangenti, roughness e riflettanza metallica.
+option.DYNAMIC_LIGHTS=Luci Dinamiche Portatili
+option.DYNAMIC_LIGHTS.comment=Attiva illuminazione dinamica per oggetti tenuti in mano.
+option.SHADOW_ENABLED=Ombreggiatura Direzionale & Specular
+option.SHADOW_ENABLED.comment=Abilita shading direzionale e riflessi GGX.
+option.POM_ENABLED=Parallax Occlusion Mapping
+option.POM_ENABLED.comment=Abilita rilievo 3D dalle heightmap LabPBR (Cinematic).
+option.AO_QUALITY=Qualita Ambient Occlusion
+value.AO_QUALITY.0=Disattivo
+value.AO_QUALITY.1=LabPBR Micro-AO
+value.AO_QUALITY.2=LabPBR + Cavity Schermo
+option.POM_DEPTH=Profondita POM
+option.POM_STEPS=Passi Raymarch POM

@@ -1,0 +1,18 @@
+profile.Potato=Potato (Max FPS)
+profile.Balanced=Balanced LabPBR (<= 3.8ms Target)
+profile.Cinematic=Cinematic (POM + Micro-AO)
+
+option.PBR_ENABLED=LabPBR 1.3 Materials
+option.PBR_ENABLED.comment=Enable physically based normals, roughness and metallic reflectance.
+option.DYNAMIC_LIGHTS=Dynamic Held Lights
+option.DYNAMIC_LIGHTS.comment=Enable smooth handheld dynamic light falloff.
+option.SHADOW_ENABLED=Directional Shading & Specular
+option.SHADOW_ENABLED.comment=Enable sun/moon directional shading and GGX specular highlights.
+option.POM_ENABLED=Parallax Occlusion Mapping
+option.POM_ENABLED.comment=Enable 3D depth relief using LabPBR heightmaps (Cinematic).
+option.AO_QUALITY=Ambient Occlusion Quality
+value.AO_QUALITY.0=Off
+value.AO_QUALITY.1=LabPBR Micro-AO
+value.AO_QUALITY.2=LabPBR + Screen Cavity
+option.POM_DEPTH=POM Depth
+option.POM_STEPS=POM Raymarch Steps
