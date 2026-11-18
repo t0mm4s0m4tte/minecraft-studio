@@ -7,6 +7,8 @@ run/
 **/build/
 **/run/
 **/.gradle/
+**/.architectury-transformer/
+**/logs/
 
 # IDE / Editor
 .idea/
@@ -34,3 +36,8 @@ Desktop.ini
 # Build & Release Output
 dist/
 *.log
+
+# Scratch & Screen captures
+*.jpg
+packs/aetheria-labpbr-32x/vanilla_raw_16x/
+convert_pngs.ps1
