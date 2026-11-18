@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/spruce_planks",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/spruce_planks",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/spruce_planks",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/spruce_planks",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}

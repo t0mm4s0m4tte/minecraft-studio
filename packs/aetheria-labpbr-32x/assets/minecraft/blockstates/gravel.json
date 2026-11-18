@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/gravel",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/gravel",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/gravel",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/gravel",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}
