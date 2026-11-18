@@ -289,7 +289,7 @@ void main() {
     }
 
     // 2. Volumetric Light / Godrays
-    if (depth > 0.0001) {
+    if (depth > 0.0001 && effectiveRain < 0.85) {
         vec3 godrays = computeVolumetricLight(viewPos, depth, vTexCoord, dither, effectiveRain);
         color += godrays;
     }
