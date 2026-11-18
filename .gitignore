@@ -39,5 +39,6 @@ dist/
 
 # Scratch & Screen captures
 *.jpg
+scratch/
 packs/aetheria-labpbr-32x/vanilla_raw_16x/
 convert_pngs.ps1
