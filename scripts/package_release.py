@@ -79,7 +79,10 @@ def build_release(
     resource_zip = out / f"Aetheria-LabPBR-32x-{version}.zip"
     shader_zip = out / f"Luminary-Shaders-{version}.zip"
 
-    _zip_selected(pack_dir, resource_zip, ["pack.mcmeta", "assets"])
+    pack_entries = ["pack.mcmeta", "assets"]
+    if (pack_dir / "pack.png").is_file():
+        pack_entries.insert(1, "pack.png")
+    _zip_selected(pack_dir, resource_zip, pack_entries)
     _zip_selected(shader_dir, shader_zip, ["shaders"])
 
     artifacts = {

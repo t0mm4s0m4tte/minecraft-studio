@@ -87,7 +87,7 @@ class TestPackageRelease(unittest.TestCase):
             )
             with zipfile.ZipFile(artifacts["resource_pack"]) as zf:
                 pngs = [n for n in zf.namelist() if n.endswith(".png")]
-                self.assertEqual(len(pngs), 180)
+                self.assertGreaterEqual(len(pngs), 180)
                 self.assertIn("pack.mcmeta", zf.namelist())
 
             with zipfile.ZipFile(artifacts["shader_pack"]) as zf:
