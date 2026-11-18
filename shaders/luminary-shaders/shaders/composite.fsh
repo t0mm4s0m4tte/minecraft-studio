@@ -36,6 +36,8 @@ uniform float viewWidth;
 uniform float viewHeight;
 uniform float near;
 uniform float far;
+uniform float wetness;
+uniform float rainStrength;
 
 in vec2 vTexCoord;
 
@@ -178,7 +180,7 @@ vec3 computeSSR(vec3 viewPos, vec3 N, float smoothness, float isMetal, vec2 scre
 // =============================================================================
 // VOLUMETRIC LIGHT / GODRAYS
 // =============================================================================
-vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dither) {
+vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dither, float rain) {
 #if !defined(VOLUMETRIC_LIGHT) || VOLUMETRIC_QUALITY == 0
     return vec3(0.0);
 #else
@@ -186,8 +188,8 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
     vec3 V = normalize(viewPos);
     float cosTheta = dot(V, L);
 
-    // Fase di scattering in avanti (Henyey-Greenstein g = 0.68)
-    float phase = henyeyGreenstein(cosTheta, 0.68);
+    // Fase di scattering calibrata (Henyey-Greenstein g = 0.58)
+    float phase = henyeyGreenstein(cosTheta, 0.58);
 
 #if VOLUMETRIC_QUALITY == 1
     const int STEPS = 8;
@@ -204,7 +206,7 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
     vec3 startPos = rayDir * (stepLength * dither);
 
     vec3 accumLight = vec3(0.0);
-    vec3 sunColor = vec3(1.35, 1.25, 1.10);
+    vec3 sunColor = vec3(1.20, 1.15, 1.05);
 
     for (int i = 0; i < STEPS; i++) {
         vec3 sampleView = startPos + rayDir * (float(i) * stepLength);
@@ -229,7 +231,9 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
         }
     }
 
-    vec3 godrays = (accumLight / float(STEPS)) * phase * 1.85;
+    // Intensità bilanciata: 0.55 moltiplicatore base, attenuato durante la pioggia (cielo coperto)
+    float rainAtten = mix(1.0, 0.20, rain);
+    vec3 godrays = (accumLight / float(STEPS)) * (phase * 0.55 * rainAtten);
     return godrays;
 #endif
 }
@@ -239,6 +243,7 @@ void main() {
     vec4 normalData = texture(colortex1, vTexCoord);
     vec4 pbrData = texture(colortex2, vTexCoord);
     float depth = texture(depthtex0, vTexCoord).r;
+    float effectiveRain = max(wetness, rainStrength);
 
     float smoothness = pbrData.r;
     float isMetal = pbrData.g;
@@ -268,7 +273,7 @@ void main() {
 
     // 2. Volumetric Light / Godrays
     if (depth > 0.0001) {
-        vec3 godrays = computeVolumetricLight(viewPos, depth, vTexCoord, dither);
+        vec3 godrays = computeVolumetricLight(viewPos, depth, vTexCoord, dither, effectiveRain);
         color += godrays;
     }
 

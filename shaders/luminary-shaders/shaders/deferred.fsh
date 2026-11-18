@@ -22,6 +22,8 @@ uniform float viewWidth;
 uniform float viewHeight;
 uniform float near;
 uniform float far;
+uniform float wetness;
+uniform float rainStrength;
 
 in vec2 vTexCoord;
 
@@ -33,7 +35,7 @@ float linearizeDepth(float d) {
     return (2.0 * near * far) / max(far + near - z_n * (far - near), 0.0001);
 }
 
-vec3 computeAtmosphericSky(vec3 viewDir, vec3 upDir, vec3 sunDir) {
+vec3 computeAtmosphericSky(vec3 viewDir, vec3 upDir, vec3 sunDir, float rain) {
     float vDotUp = dot(viewDir, upDir);
     float vDotSun = clamp(dot(viewDir, sunDir), 0.0, 1.0);
     float sunElevation = clamp(dot(sunDir, upDir) * 0.5 + 0.5, 0.0, 1.0);
@@ -50,10 +52,17 @@ vec3 computeAtmosphericSky(vec3 viewDir, vec3 upDir, vec3 sunDir) {
     float horizonFactor = pow(1.0 - clamp(vDotUp, 0.0, 1.0), 2.4);
     vec3 sky = mix(zenith, horizon, horizonFactor);
 
-    // Scattering di Mie (alone solare anisotropo Henyey-Greenstein g = 0.76)
-    float mieGlow = pow(vDotSun, 8.0) * 0.32 + pow(vDotSun, 64.0) * 0.85;
-    vec3 sunTint = mix(vec3(1.2, 0.45, 0.15), vec3(1.4, 1.28, 1.05), sunElevation);
-    sky += sunTint * mieGlow * sunElevation;
+    // Scattering di Mie (alone solare anisotropo):
+    // Esponente più stretto (64..256) per evitare che il disco solare diventi una palla gigante di 50 gradi,
+    // e modulazione durante la pioggia (cielo coperto e luce diffusa).
+    float mieGlow = pow(vDotSun, 32.0) * 0.18 + pow(vDotSun, 256.0) * 0.65;
+    vec3 sunTint = mix(vec3(1.2, 0.45, 0.15), vec3(1.3, 1.25, 1.10), sunElevation);
+    float sunVisibility = mix(1.0, 0.15, rain);
+    sky += sunTint * (mieGlow * sunElevation * sunVisibility);
+
+    // Cielo plumbeo/grigio desaturato durante la pioggia
+    vec3 rainSky = mix(vec3(0.12, 0.14, 0.18), vec3(0.38, 0.42, 0.48), sunElevation);
+    sky = mix(sky, rainSky, rain * 0.85);
 
     return sky;
 }
@@ -62,6 +71,7 @@ void main() {
     vec4 baseColor = texture(colortex0, vTexCoord);
     vec4 normalData = texture(colortex1, vTexCoord);
     float depth = texture(depthtex0, vTexCoord).r;
+    float effectiveRain = max(wetness, rainStrength);
 
     // Ricostruzione direzione del raggio in View-Space
     vec4 clipPos = vec4(vTexCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
@@ -74,10 +84,10 @@ void main() {
 
     // Se è cielo (depth >= 0.9999), applica scattering Rayleigh + Mie preservando sole/stelle
     if (depth >= 0.9999) {
-        vec3 atmoSky = computeAtmosphericSky(viewDir, upDir, sunDir);
+        vec3 atmoSky = computeAtmosphericSky(viewDir, upDir, sunDir, effectiveRain);
         // Preserva eventuale disco solare / stelle già disegnati in baseColor
         float baseLuma = dot(baseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-        vec3 finalSky = mix(atmoSky, max(baseColor.rgb, atmoSky), clamp((baseLuma - 0.35) * 2.0, 0.0, 1.0));
+        vec3 finalSky = mix(atmoSky, max(baseColor.rgb, atmoSky), clamp((baseLuma - 0.35) * 2.0, 0.0, 1.0) * (1.0 - effectiveRain * 0.75));
         outColor = vec4(finalSky, 1.0);
         return;
     }
@@ -103,11 +113,13 @@ void main() {
 
     vec3 sceneColor = baseColor.rgb * mix(0.88, 1.0, matAO) * ssao;
 
-    // Foschia atmosferica morbida (Aerial Perspective) oltre i 90 blocchi
+    // Foschia atmosferica morbida (Aerial Perspective) oltre i 90 blocchi (più densa durante pioggia)
     float dist = length(viewPos);
-    float fogFactor = clamp(1.0 - exp(-max(dist - 48.0, 0.0) * 0.0045), 0.0, 0.65);
+    float fogDensity = mix(0.0045, 0.012, effectiveRain);
+    float fogStart = mix(48.0, 24.0, effectiveRain);
+    float fogFactor = clamp(1.0 - exp(-max(dist - fogStart, 0.0) * fogDensity), 0.0, mix(0.65, 0.85, effectiveRain));
     if (fogFactor > 0.001) {
-        vec3 horizonFog = computeAtmosphericSky(normalize(vec3(viewDir.x, 0.05, viewDir.z)), upDir, sunDir);
+        vec3 horizonFog = computeAtmosphericSky(normalize(vec3(viewDir.x, 0.05, viewDir.z)), upDir, sunDir, effectiveRain);
         sceneColor = mix(sceneColor, horizonFog, fogFactor);
     }
 

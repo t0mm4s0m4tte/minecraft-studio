@@ -426,7 +426,8 @@ void main() {
 
         float rDotSun = clamp(dot(R, L), 0.0, 1.0);
         float glintPower = mix(8.0, 48.0, smoothness);
-        envSky += vec3(1.55, 1.42, 1.18) * pow(rDotSun, glintPower) * (0.35 + 0.65 * shadowColor) * skyVis;
+        float rainGlintMod = mix(1.0, 0.40, wetFactor); // Attenua il riverbero del sole diretto durante pioggia (luce diffusa)
+        envSky += vec3(1.55, 1.42, 1.18) * pow(rDotSun, glintPower) * (0.35 + 0.65 * shadowColor) * skyVis * rainGlintMod;
         envSky += vec3(1.25, 0.78, 0.35) * (lm.x * lm.x * 1.05);
 
         vec3 F_env = F_Schlick(NdotV, F0);
