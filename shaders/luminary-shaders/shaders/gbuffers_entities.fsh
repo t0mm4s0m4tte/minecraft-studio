@@ -14,18 +14,24 @@ in vec2 vLmCoord;
 in vec3 vNormal;
 in vec3 vViewPos;
 
-/* RENDERTARGETS: 0,1 */
+/* RENDERTARGETS: 0,1,2 */
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec4 outData;
+layout(location = 1) out vec4 outNormal;
+layout(location = 2) out vec4 outData;
+
+vec3 srgbToLinear(vec3 c) {
+    return pow(max(c, vec3(0.0)), vec3(2.2));
+}
 
 void main() {
     vec4 tex = texture(gtexture, vTexCoord) * vColor;
     if (tex.a < 0.1) discard;
 
-    // Flash del danno entità
     tex.rgb = mix(tex.rgb, entityColor.rgb, entityColor.a);
+    vec3 light = srgbToLinear(texture(lightmap, vLmCoord).rgb);
+    vec3 linearRgb = srgbToLinear(tex.rgb) * light;
 
-    vec3 light = texture(lightmap, vLmCoord).rgb;
-    outColor = vec4(tex.rgb * light, tex.a);
+    outColor = vec4(linearRgb, tex.a);
+    outNormal = vec4(normalize(vNormal) * 0.5 + 0.5, 1.0);
     outData = vec4(0.0);
 }

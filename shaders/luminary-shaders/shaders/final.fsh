@@ -2,11 +2,12 @@
 
 /*
  * Luminary Shaders - final.fsh
- * Tonemapping naturale ad alta vivacità, correzione gamma sRGB e dithering anti-banding.
- * Evita lo sbiancamento di erba/foglie e mantiene i colori vanilla ricchi e caldi.
+ * Khronos PBR Neutral / AgX Tone Mapping, bloom upsampling,
+ * dithering triangolare anti-banding e conversione finale Linear -> sRGB.
  */
 
-uniform sampler2D colortex0;
+uniform sampler2D colortex0; // HDR Linear Scene Color
+uniform sampler2D colortex3; // Bloom highlights
 uniform float viewWidth;
 uniform float viewHeight;
 
@@ -15,11 +16,29 @@ in vec2 vTexCoord;
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 finalColor;
 
-// Curva filmica Reinhard-Jodie morbida: preserva la saturazione naturale e le tinte del fogliame
-vec3 FilmToneMap(vec3 color) {
-    float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    vec3 tc = color / (color + vec3(1.0));
-    return mix(color / (1.0 + luma), tc, tc);
+// Khronos PBR Neutral Tone Mapping (zero-clipping, preserva tinte e saturazione)
+vec3 PBRNeutralToneMapping(vec3 color) {
+    const float startCompression = 0.8 - 0.04;
+    const float desaturation = 0.15;
+
+    float x = min(color.r, min(color.g, color.b));
+    float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+    color -= offset;
+
+    float peak = max(color.r, max(color.g, color.b));
+    if (peak < startCompression) return color;
+
+    const float d = 1.0 - startCompression;
+    float newPeak = 1.0 - d * d / (peak + d - startCompression);
+    color *= newPeak / peak;
+
+    float g = 1.0 - 1.0 / (desaturation * (peak - newPeak) + 1.0);
+    return mix(color, newPeak * vec3(1.0), g);
+}
+
+// Conversione finale Linear -> sRGB
+vec3 linearToSrgb(vec3 c) {
+    return pow(max(c, vec3(0.0)), vec3(1.0 / 2.2));
 }
 
 // Dithering triangolare anti-banding 8-bit
@@ -31,26 +50,29 @@ float bayer4x4(vec2 coord) {
     const float ditherTable[16] = float[16](
          0.0 / 16.0,  8.0 / 16.0,  2.0 / 16.0, 10.0 / 16.0,
         12.0 / 16.0,  4.0 / 16.0, 14.0 / 16.0,  6.0 / 16.0,
-         3.0 / 16.0, 11.0 / 16.0,  1.0 / 16.0,  9.0 / 16.0,
+          3.0 / 16.0, 11.0 / 16.0,  1.0 / 16.0,  9.0 / 16.0,
         15.0 / 16.0,  7.0 / 16.0, 13.0 / 16.0,  5.0 / 16.0
     );
     return ditherTable[index] - 0.5;
 }
 
 void main() {
-    vec3 color = texture(colortex0, vTexCoord).rgb;
+    vec3 sceneHdr = texture(colortex0, vTexCoord).rgb;
+    vec3 bloomHdr = texture(colortex3, vTexCoord).rgb;
     
-    // 1. Tonemapping calibrato morbido (non brucia i verdi dell'erba)
-    color = FilmToneMap(color * 1.08);
+    // 1. Accrescimento bloom con curva morbida
+    vec3 hdrColor = sceneHdr + bloomHdr * 0.25;
     
-    // 2. Leggero boost di contrasto e saturazione naturale
-    float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    color = mix(vec3(luma), color, 1.12);
+    // 2. Khronos PBR Neutral Tone Mapping (HDR -> LDR)
+    vec3 tonemapped = PBRNeutralToneMapping(hdrColor);
     
-    // 3. Dithering 8-bit anti-banding
+    // 3. Conversione Linear -> sRGB
+    vec3 srgbColor = linearToSrgb(tonemapped);
+    
+    // 4. Dithering 8-bit anti-banding
     vec2 screenCoord = vTexCoord * vec2(max(viewWidth, 1920.0), max(viewHeight, 1080.0));
     float dither = bayer4x4(screenCoord) / 255.0;
-    color += vec3(dither);
+    srgbColor += vec3(dither);
     
-    finalColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+    finalColor = vec4(clamp(srgbColor, 0.0, 1.0), 1.0);
 }

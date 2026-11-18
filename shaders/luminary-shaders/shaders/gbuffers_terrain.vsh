@@ -2,7 +2,7 @@
 
 /*
  * Luminary Shaders - gbuffers_terrain.vsh
- * Passaggio vertici per terreno con calcolo TBN, proiezione shadow map e bounds atlas.
+ * G-Buffer vertex stage con calcolo TBN Gram-Schmidt sicuro e bounds atlas.
  */
 
 attribute vec4 at_tangent;
@@ -32,18 +32,22 @@ void main() {
 
     vNormal = normalize(gl_NormalMatrix * gl_Normal);
 
+    // Costruzione TBN Gram-Schmidt sicura contro NaN su normali asse X
     if (abs(at_tangent.w) > 0.001) {
-        vTangent = normalize(gl_NormalMatrix * at_tangent.xyz);
-        vBitangent = normalize(cross(vTangent, vNormal) * at_tangent.w);
+        vec3 t = normalize(gl_NormalMatrix * at_tangent.xyz);
+        t = normalize(t - dot(t, vNormal) * vNormal);
+        vTangent = t;
+        vBitangent = normalize(cross(vNormal, vTangent) * at_tangent.w);
     } else {
-        vTangent = vec3(1.0, 0.0, 0.0);
-        vBitangent = cross(vNormal, vTangent);
+        vec3 c1 = cross(vNormal, vec3(0.0, 0.0, 1.0));
+        vec3 c2 = cross(vNormal, vec3(0.0, 1.0, 0.0));
+        vTangent = length(c1) > length(c2) ? normalize(c1) : normalize(c2);
+        vBitangent = normalize(cross(vNormal, vTangent));
     }
 
     vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
     vViewPos = viewPos.xyz;
 
-    // Coordinate per campionamento ombra diretta
     vec4 shadowView = shadowModelView * (gl_ModelViewMatrixInverse * viewPos);
     vShadowPos = shadowProjection * shadowView;
 
