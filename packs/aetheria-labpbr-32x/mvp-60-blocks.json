@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "minecraft_target": "1.21.1",
+  "resolution": 32,
+  "standard": "LabPBR 1.3",
+  "total_blocks": 60,
+  "channels_spec": {
+    "_n": {
+      "R": "Normal X (tangent space, 0-255 mapped to -1.0..+1.0)",
+      "G": "Normal Y (tangent space, 0-255 mapped to -1.0..+1.0)",
+      "B": "Ambient Occlusion (0 = black/occluded, 255 = full ambient light)",
+      "A": "Height/Displacement (0 = deep recess, 255 = maximum extrusion, 127 = neutral)"
+    },
+    "_s": {
+      "R": "Smoothness (0 = ultra rough/diffuse, 255 = mirror smooth)",
+      "G": "F0 / Metalness (0-229 = dielectric F0 reflectance 0.00-0.08, 230-255 = metals: iron, gold, copper)",
+      "B": "Porosity / Subsurface Scattering (0-64 = no subsurface/porous, 65-255 = SSS profile)",
+      "A": "Emissivity (0 = non-emissive, 1-254 = emissive brightness level, 255 = reserved/disabled)"
+    }
+  },
+  "categories": {
+    "Terrain & Stone (12)": [
+      "stone",
+      "cobblestone",
+      "mossy_cobblestone",
+      "smooth_stone",
+      "stone_bricks",
+      "mossy_stone_bricks",
+      "cracked_stone_bricks",
+      "deepslate",
+      "cobbled_deepslate",
+      "deepslate_bricks",
+      "deepslate_tiles",
+      "gravel"
+    ],
+    "Ores & Raw Metals (12)": [
+      "coal_ore",
+      "deepslate_coal_ore",
+      "iron_ore",
+      "deepslate_iron_ore",
+      "copper_ore",
+      "deepslate_copper_ore",
+      "gold_ore",
+      "deepslate_gold_ore",
+      "redstone_ore",
+      "deepslate_redstone_ore",
+      "diamond_ore",
+      "deepslate_diamond_ore"
+    ],
+    "Woods & Construction (12)": [
+      "oak_log",
+      "oak_log_top",
+      "oak_planks",
+      "spruce_log",
+      "spruce_log_top",
+      "spruce_planks",
+      "dark_oak_log",
+      "dark_oak_log_top",
+      "dark_oak_planks",
+      "cherry_log",
+      "cherry_log_top",
+      "cherry_planks"
+    ],
+    "Trial Chambers & Copper 1.21 (14)": [
+      "copper_block",
+      "exposed_copper",
+      "weathered_copper",
+      "oxidized_copper",
+      "cut_copper",
+      "copper_grate",
+      "chiseled_copper",
+      "copper_bulb",
+      "copper_bulb_lit",
+      "tuff",
+      "chiseled_tuff",
+      "tuff_bricks",
+      "tuff_tiles",
+      "crafter_top"
+    ],
+    "Light Sources & Dynamic Emitters (10)": [
+      "torch",
+      "wall_torch",
+      "soul_torch",
+      "lantern",
+      "soul_lantern",
+      "glowstone",
+      "sea_lantern",
+      "shroomlight",
+      "crying_obsidian",
+      "trial_spawner_side"
+    ]
+  }
+}

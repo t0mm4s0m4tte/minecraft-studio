@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "ambient_luminescence",
+  "version": "${version}",
+  "name": "Ambient Luminescence",
+  "description": "High-efficiency client-side dynamic lighting engine for Iris + Sodium (MC 1.21.1).",
+  "authors": [
+    "Luminary Studios"
+  ],
+  "contact": {
+    "homepage": "https://github.com/luminary/ambient-luminescence"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.luminary.ambientluminescence.fabric.AmbientLuminescenceFabricClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

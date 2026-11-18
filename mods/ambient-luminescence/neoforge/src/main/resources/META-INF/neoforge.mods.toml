@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="ambient_luminescence"
+version="${version}"
+displayName="Ambient Luminescence"
+description='''High-efficiency client-side dynamic lighting engine for Iris + Sodium (MC 1.21.1).'''
+authors="Luminary Studios"
+
+[[dependencies.ambient_luminescence]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.65,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.ambient_luminescence]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="CLIENT"
