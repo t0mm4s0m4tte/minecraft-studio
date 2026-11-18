@@ -4,9 +4,10 @@
  * Luminary Shaders - gbuffers_terrain.fsh
  * G-Buffer stage: linearizzazione sRGB -> Linear, TBN mapping LabPBR 1.3,
  * Parallax Occlusion Mapping (POM) 3D + POM Self-Shadowing,
- * Cook-Torrance GGX, Subsurface Scattering (B: 65..255), Porosità/Wetness (B: 0..64),
+ * Rain Wetness & Dynamic Puddles con Porosità LabPBR 1.3 (0..64),
+ * Cook-Torrance GGX, Subsurface Scattering (B: 65..255),
  * Shadow Map non-lineare simmetrica 9-tap Poisson + shadowcolor0 per ombre colorate,
- * Environment IBL (riflessione emisferica cielo/suolo + sole riflesso su metalli e gemme lucide).
+ * Environment IBL (riflessione emisferica cielo/suolo + sole riflesso su metalli e superfici bagnate).
  */
 
 #include "/lib/settings.glsl"
@@ -21,9 +22,13 @@ uniform sampler2D shadowcolor0; // Colore filtro traslucido (vetro colorato, acq
 
 uniform vec3 shadowLightPosition;
 uniform vec3 upPosition;
+uniform vec3 cameraPosition;
 uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 uniform int shadowMapResolution;
+uniform float wetness;
+uniform float rainStrength;
+uniform int isEyeInWater;
 
 in vec4 vColor;
 in vec2 vTexCoord;
@@ -32,6 +37,8 @@ in vec3 vNormal;
 in vec3 vTangent;
 in vec3 vBitangent;
 in vec3 vViewPos;
+in vec3 vWorldNormal;
+in vec3 vWorldPos;
 in vec4 vShadowPos;
 flat in vec4 vAtlasBounds;
 
@@ -55,7 +62,6 @@ vec2 computeParallaxCoord(vec2 startUV, vec3 viewDirTS, float viewDist, vec4 bou
     outPomDepth = 0.0;
     if (viewDist > 24.0 || abs(viewDirTS.z) < 0.15 || bounds.z <= 0.00001) return startUV;
 
-    // Se la faccia ha già un pixel trasparente o height == 255 (modello 3D sub-blocco come torcia/lanterna/erba), disattiva POM
     float baseAlpha = textureGrad(gtexture, startUV, ddx, ddy).a;
     if (baseAlpha < 0.99) return startUV;
     float hSample = textureGrad(normals, startUV, ddx, ddy).a;
@@ -64,7 +70,6 @@ vec2 computeParallaxCoord(vec2 startUV, vec3 viewDirTS, float viewDist, vec4 bou
     float fade = clamp(1.0 - (viewDist / 24.0), 0.0, 1.0);
     float layerCount = float(POM_STEPS);
     float layerDepth = 1.0 / layerCount;
-    // Clamp dello spostamento UV massimo entro la cella dello sprite per evitare bleeding o wrap-around su cubi sottili
     vec2 rawOffset = (viewDirTS.xy / max(abs(viewDirTS.z), 0.35)) * (POM_DEPTH * 0.65 * fade) * bounds.zw;
     vec2 maxOffset = clamp(rawOffset, -bounds.zw * 0.22, bounds.zw * 0.22);
     vec2 deltaUV = maxOffset / layerCount;
@@ -89,7 +94,6 @@ vec2 computeParallaxCoord(vec2 startUV, vec3 viewDirTS, float viewDist, vec4 bou
     return wrapAtlasCoord(mix(currUV, prevUV, weight), bounds);
 }
 
-// POM Self-Shadowing: ray-marching veloce a 4 step verso la luce nello spazio tangente
 float computePomSelfShadow(vec2 pomUV, float surfaceDepth, vec3 lightDirTS, float viewDist, vec4 bounds, vec2 ddx, vec2 ddy) {
     if (viewDist > 20.0 || lightDirTS.z <= 0.05 || surfaceDepth <= 0.04 || bounds.z <= 0.00001) return 1.0;
 
@@ -195,6 +199,24 @@ vec3 sampleColoredShadowMap(vec4 shadowPos, float NdotL) {
 #endif
 }
 
+// Noise procedurale leggero 2D per micro-pozzanghere organiche
+float hash2D(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise2D(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash2D(i);
+    float b = hash2D(i + vec2(1.0, 0.0));
+    float c = hash2D(i + vec2(0.0, 1.0));
+    float d = hash2D(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 void main() {
     vec2 coord = vTexCoord;
     vec2 ddx = dFdx(vTexCoord);
@@ -240,7 +262,6 @@ void main() {
 
     if (normalSample.r > 0.004 || normalSample.g > 0.004) {
         vec2 normalXY = normalSample.xy * 2.0 - 1.0;
-        // Esalta la tridimensionalità dei solchi e delle facce cristalline
         normalXY *= 1.35;
         float normalZ = sqrt(max(0.02, 1.0 - dot(normalXY, normalXY)));
         vec3 tNormal = normalize(vec3(normalXY, normalZ));
@@ -284,12 +305,59 @@ void main() {
     }
 #endif
 
+    // =========================================================================
+    // RAIN WETNESS & DYNAMIC PUDDLES (Atmospheric Upgrade v1.1.0)
+    // =========================================================================
+    float effectiveRain = max(wetness, rainStrength);
+    float skyExposure = clamp((vLmCoord.y - 0.70) / 0.28, 0.0, 1.0);
+    float wetFactor = effectiveRain * skyExposure * float(isEyeInWater == 0);
+
+#ifdef RAIN_WETNESS
+    if (wetFactor > 0.001) {
+        // 1. Oscuramento fisico albedo per assorbimento d'acqua nei materiali porosi
+        // I materiali con porosità alta assorbono più acqua e si scuriscono significativamente
+        float absorbDarken = mix(1.0, 0.58, porosity * wetFactor);
+        linearAlbedo *= absorbDarken;
+
+        // 2. Incremento smoothness superficiale dovuto al velo d'acqua (film sottile)
+        float wetSmoothness = mix(smoothness, 0.88, wetFactor * (0.35 + 0.65 * (1.0 - porosity)));
+        smoothness = max(smoothness, wetSmoothness);
+        if (isMetal < 0.5) {
+            F0 = mix(F0, vec3(0.04), wetFactor * 0.5); // F0 acqua ~ 0.02..0.04
+        }
+    }
+#endif
+
+#ifdef DYNAMIC_PUDDLES
+    if (wetFactor > 0.05 && vWorldNormal.y > 0.80) {
+        // Micro-pozzanghere organiche su superfici orizzontali rivolte al cielo
+        vec3 worldAbsPos = vWorldPos + cameraPosition;
+        float puddleNoise = noise2D(worldAbsPos.xz * 0.65);
+        puddleNoise = puddleNoise * 0.7 + noise2D(worldAbsPos.xz * 1.85) * 0.3;
+
+        // Soglia di accumulo guidata da intensità pioggia e porosità (materiali impermeabili formano pozzanghere prima)
+        float accumulationThreshold = mix(0.70, 0.35, wetFactor * (1.0 - porosity * 0.45));
+        float puddleMask = smoothstep(accumulationThreshold, accumulationThreshold + 0.15, puddleNoise);
+
+        if (puddleMask > 0.01) {
+            // Appiattimento normale verso l'alto (normale piana dell'acqua in vista)
+            vec3 flatViewUp = normalize(gl_NormalMatrix * vec3(0.0, 1.0, 0.0));
+            N = normalize(mix(N, flatViewUp, puddleMask * 0.92));
+            smoothness = mix(smoothness, 0.95, puddleMask);
+            if (isMetal < 0.5) {
+                F0 = mix(F0, vec3(0.025), puddleMask);
+            }
+            // Scurimento fondale pozzanghera per rifrazione/accumulo
+            linearAlbedo *= mix(1.0, 0.72, puddleMask);
+        }
+    }
+#endif
+
     vec2 lm = vLmCoord;
     vec3 dynamicTorchLight = vec3(0.0);
 #ifdef DYNAMIC_LIGHTS
     int maxHeldLight = max(heldBlockLightValue, heldBlockLightValue2);
     if (maxHeldLight > 0) {
-        // Sorgente spostata leggermente davanti e sopra la camera per illuminare uniformemente il terreno e le pareti
         vec3 handLightPos = vec3(0.25, 0.15, -0.35);
         vec3 toLight = handLightPos - vViewPos;
         float lightDist = length(toLight);
@@ -304,7 +372,6 @@ void main() {
     }
 #endif
 
-    // Separiamo la componente di luce celeste (sole/luna) dalla luce locale dei blocchi (torce, lanterne, lava)
     vec3 totalLightMap = srgbToLinear(texture(lightmap, lm).rgb);
     vec3 skyOnlyLight  = srgbToLinear(texture(lightmap, vec2(0.03125, lm.y)).rgb);
     vec3 blockLight    = max(totalLightMap - skyOnlyLight, vec3(0.0));
@@ -334,13 +401,8 @@ void main() {
         sssLight = linearAlbedo * (skyOnlyLight + blockLight) * (wrapNdotL + backScatter) * sss * 0.65 * mix(vec3(0.35), vec3(1.0), shadowColor);
     }
 
-    // La luce celeste (sole/luna) riceve contrasto micro-geometrico ed è soggetta a ombre celesti
     vec3 celestialIlluminance = mix(vec3(0.48, 0.52, 0.62), vec3(1.50, 1.45, 1.36), NdotL * shadowColor);
     vec3 directSkyLight = skyOnlyLight * celestialIlluminance;
-
-    // La luce dei blocchi e delle torce è locale e onnidirezionale:
-    // NON viene mai moltiplicata per l'ombra celeste o attenuata!
-    // Questo elimina al 100% l'ombra del giocatore proiettata dentro la luce della torcia in mano.
     vec3 totalLight = directSkyLight + blockLight + dynamicTorchLight;
 
 #ifdef PBR_ENABLED
@@ -355,19 +417,16 @@ void main() {
         specularColor += (numerator / denominator) * NdotL * skyOnlyLight * shadowColor * 2.1;
     }
 
-    // Riflesso Speculare Ambientale (Hemispheric Sky/Ground + View-Glint IBL) per metalli e gemme
+    // Riflesso Speculare Ambientale per metalli, gemme e superfici bagnate/pozzanghere
     if (smoothness > 0.18 || isMetal > 0.5) {
         vec3 R = reflect(-V, N);
         float skyFactor = clamp(dot(R, upDir) * 0.5 + 0.5, 0.0, 1.0);
         float skyVis = clamp(lm.y * 1.15, 0.15, 1.0);
         vec3 envSky = mix(vec3(0.12, 0.14, 0.18), vec3(0.62, 0.84, 1.18), skyFactor) * skyVis;
 
-        // Riflesso ambientale del sole sulle facce sfaccettate delle gemme e dei metalli anche su pareti verticali
         float rDotSun = clamp(dot(R, L), 0.0, 1.0);
         float glintPower = mix(8.0, 48.0, smoothness);
         envSky += vec3(1.55, 1.42, 1.18) * pow(rDotSun, glintPower) * (0.35 + 0.65 * shadowColor) * skyVis;
-
-        // Luce di torcia calda riflessa
         envSky += vec3(1.25, 0.78, 0.35) * (lm.x * lm.x * 1.05);
 
         vec3 F_env = F_Schlick(NdotV, F0);

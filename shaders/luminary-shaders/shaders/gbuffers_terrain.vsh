@@ -2,12 +2,13 @@
 
 /*
  * Luminary Shaders - gbuffers_terrain.vsh
- * G-Buffer vertex stage con calcolo TBN Gram-Schmidt sicuro e bounds atlas.
+ * G-Buffer vertex stage con calcolo TBN Gram-Schmidt sicuro, bounds atlas e vettori mondo.
  */
 
 attribute vec4 at_tangent;
 attribute vec4 mc_midTexCoord;
 
+uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
 
@@ -18,6 +19,8 @@ out vec3 vNormal;
 out vec3 vTangent;
 out vec3 vBitangent;
 out vec3 vViewPos;
+out vec3 vWorldNormal;
+out vec3 vWorldPos;
 out vec4 vShadowPos;
 flat out vec4 vAtlasBounds;
 
@@ -31,6 +34,7 @@ void main() {
     vAtlasBounds = vec4(midUV - halfExtent, halfExtent * 2.0);
 
     vNormal = normalize(gl_NormalMatrix * gl_Normal);
+    vWorldNormal = normalize(gl_Normal);
 
     // Costruzione TBN Gram-Schmidt sicura contro NaN su normali asse X
     if (abs(at_tangent.w) > 0.001) {
@@ -48,7 +52,10 @@ void main() {
     vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
     vViewPos = viewPos.xyz;
 
-    vec4 shadowView = shadowModelView * (gl_ModelViewMatrixInverse * viewPos);
+    vec4 worldPos = gbufferModelViewInverse * viewPos;
+    vWorldPos = worldPos.xyz;
+
+    vec4 shadowView = shadowModelView * worldPos;
     vShadowPos = shadowProjection * shadowView;
 
     gl_Position = gl_ProjectionMatrix * viewPos;
