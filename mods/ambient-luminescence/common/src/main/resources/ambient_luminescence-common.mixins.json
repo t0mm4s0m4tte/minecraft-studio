@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.luminary.ambientluminescence.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "LevelRendererMixin",
+    "SodiumLightDataAccessMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

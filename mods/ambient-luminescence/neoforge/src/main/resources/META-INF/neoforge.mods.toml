@@ -6,8 +6,12 @@ license="MIT"
 modId="ambient_luminescence"
 version="${version}"
 displayName="Ambient Luminescence"
+displayTest="IGNORE_ALL_VERSION"
 description='''High-efficiency client-side dynamic lighting engine for Iris + Sodium (MC 1.21.1).'''
 authors="Luminary Studios"
+
+[[mixins]]
+config="ambient_luminescence-common.mixins.json"
 
 [[dependencies.ambient_luminescence]]
 modId="neoforge"

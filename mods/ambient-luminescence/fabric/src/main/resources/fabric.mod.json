@@ -11,12 +11,16 @@
     "homepage": "https://github.com/luminary/ambient-luminescence"
   },
   "license": "MIT",
+  "icon": "assets/ambient_luminescence/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
       "com.luminary.ambientluminescence.fabric.AmbientLuminescenceFabricClient"
     ]
   },
+  "mixins": [
+    "ambient_luminescence-common.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.16.5",
     "minecraft": "1.21.1",

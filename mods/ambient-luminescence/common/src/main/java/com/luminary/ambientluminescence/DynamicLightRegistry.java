@@ -1,18 +1,25 @@
 package com.luminary.ambientluminescence;
 
-import java.util.HashMap;
-import java.util.Map;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 
 /**
- * Registro statico ad alta efficienza per l'assegnazione dei valori di luminanza (0..15)
- * a item, blocchi tenuti in mano o entità cadute a terra.
- * Zero-allocation durante il tick loop tramite cache diretta O(1).
+ * High-efficiency item luminance registry.
+ * Uses FastUtil Reference2IntOpenHashMap for runtime item identity lookup O(1)
+ * and an Object2IntOpenHashMap for string-based lookup, avoiding un-bootstrapped Items.* clinit.
  */
 public final class DynamicLightRegistry {
-    private static final Map<String, Integer> LIGHT_LEVELS = new HashMap<>();
+    private static final Reference2IntOpenHashMap<Item> ITEM_LIGHTS = new Reference2IntOpenHashMap<>();
+    private static final Object2IntOpenHashMap<String> STRING_LIGHTS = new Object2IntOpenHashMap<>();
 
     static {
-        // Fonti standard vanilla
+        ITEM_LIGHTS.defaultReturnValue(0);
+        STRING_LIGHTS.defaultReturnValue(0);
+
+        // Core vanilla light sources registered by ResourceLocation string
         register("minecraft:torch", 14);
         register("minecraft:soul_torch", 10);
         register("minecraft:redstone_torch", 7);
@@ -29,32 +36,62 @@ public final class DynamicLightRegistry {
         register("minecraft:glow_ink_sac", 8);
         register("minecraft:glow_item_frame", 8);
         register("minecraft:amethyst_cluster", 5);
-        register("minecraft:small_amethyst_bud", 1);
-        register("minecraft:medium_amethyst_bud", 2);
-        register("minecraft:large_amethyst_bud", 4);
 
-        // Blocchi Trial Chambers & Update 1.21
+        // Trial Chambers 1.21 light blocks
         register("minecraft:copper_bulb", 15);
         register("minecraft:exposed_copper_bulb", 12);
         register("minecraft:weathered_copper_bulb", 8);
         register("minecraft:oxidized_copper_bulb", 4);
-        register("minecraft:trial_spawner", 11);
-        register("minecraft:vault", 6);
     }
 
     private DynamicLightRegistry() {}
 
     public static void register(String itemId, int luminance) {
-        if (luminance >= 1 && luminance <= 15) {
-            LIGHT_LEVELS.put(itemId, luminance);
+        if (itemId != null && luminance >= 1 && luminance <= 15) {
+            STRING_LIGHTS.put(itemId, luminance);
+            try {
+                ResourceLocation rl = ResourceLocation.tryParse(itemId);
+                if (rl != null && BuiltInRegistries.ITEM != null) {
+                    Item item = BuiltInRegistries.ITEM.get(rl);
+                    if (item != null) {
+                        ITEM_LIGHTS.put(item, luminance);
+                    }
+                }
+            } catch (Throwable ignored) {
+                // Allows running in unbootstrapped unit test environments
+            }
         }
     }
 
+    public static void register(Item item, int luminance) {
+        if (item != null && luminance >= 1 && luminance <= 15) {
+            ITEM_LIGHTS.put(item, luminance);
+        }
+    }
+
+    public static int getLuminance(Item item) {
+        if (item == null) return 0;
+        int lum = ITEM_LIGHTS.getInt(item);
+        if (lum > 0) return lum;
+        try {
+            ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+            if (key != null) {
+                return STRING_LIGHTS.getInt(key.toString());
+            }
+        } catch (Throwable ignored) {}
+        return 0;
+    }
+
     public static int getLuminance(String itemId) {
-        return LIGHT_LEVELS.getOrDefault(itemId, 0);
+        if (itemId == null) return 0;
+        return STRING_LIGHTS.getInt(itemId);
+    }
+
+    public static boolean isLightSource(Item item) {
+        return getLuminance(item) > 0;
     }
 
     public static boolean isLightSource(String itemId) {
-        return LIGHT_LEVELS.containsKey(itemId);
+        return getLuminance(itemId) > 0;
     }
 }
