@@ -14,13 +14,13 @@ Suite modulare per **Minecraft Java Edition 1.21.1** costruita attorno alla pipe
 | <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | Resource pack 32x32 RGBA con normal, AO, height (`_n`), smoothness, F0/metalness, porosity ed emissività (`_s`) su 1.015 blocchi e 605 item (4.860 PNG) | Copertura 100% MC 1.21.1 (`--strict` 60/60) |
 | <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Shader pack Iris GLSL (`#version 330 compatibility`) con GGX PBR, onde Beer-Lambert, POM 3D e 3 profili | Budget target `<= 3.8 ms` GPU su `Balanced` |
 
-## Profili Shader
+## Profili Shader (v1.1.0)
 
-| Profilo | Ombre & Specular GGX | Materiali LabPBR 1.3 | Parallax Occlusion Mapping (POM) | Ambient Occlusion | Stato Benchmark |
+| Profilo | Ombre & Specular GGX | LabPBR 1.3 & Rain Wetness | SSR & Volumetric Godrays | Water Caustics & Snell | POM & AO |
 |---|---|---|---|---|---|
-| **Potato** | Disattivo | Disattivo | Disattivo | Off (`0`) | Da misurare in-game |
-| **Balanced** *(Default)* | Attivo | Attivo | Disattivo | LabPBR Micro-AO (`1`) | Target design `<= 3.8 ms` (da misurare in-game) |
-| **Cinematic** | Attivo | Attivo | Attivo su `_n.a` | LabPBR + Screen Cavity (`2`) | Da misurare in-game |
+| **Potato** | Disattivo | Disattivo | Off (`0`) | Disattivo | Off (`0`) |
+| **Balanced** *(Default)* | Attivo | Attivo (`Puddles` inclusi) | `12 step` SSR + `8 step` Godrays | Attivo | `10 step` POM + Micro-AO (`1`) |
+| **Cinematic** | Attivo | Attivo (`Puddles` inclusi) | `24 step` SSR + `16 step` Godrays | Attivo | `16 step` POM + Screen Cavity (`2`) |
 
 ## Requisiti & Installazione Rapida
 

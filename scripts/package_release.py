@@ -55,7 +55,7 @@ def _run_step(cmd, cwd: Path, env=None):
 def build_release(
     root_dir: Path,
     output_dir: Path,
-    version: str = "1.0.0",
+    version: str = "1.1.0",
     skip_gradle: bool = False,
     skip_validate: bool = False,
 ) -> dict:
@@ -91,7 +91,12 @@ def build_release(
     }
 
     for loader in ("fabric", "neoforge"):
-        src_jar = mod_dir / loader / "build" / "libs" / f"{loader}-{version}.jar"
+        libs_dir = mod_dir / loader / "build" / "libs"
+        src_jar = libs_dir / f"{loader}-{version}.jar"
+        if not src_jar.is_file() and skip_gradle and libs_dir.is_dir():
+            candidates = sorted(libs_dir.glob(f"{loader}-*.jar"))
+            if candidates:
+                src_jar = candidates[-1]
         if src_jar.is_file():
             dst_jar = out / f"ambient_luminescence-{loader}-{version}.jar"
             shutil.copy2(src_jar, dst_jar)
@@ -106,7 +111,7 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description="Genera archivi release per minecraft-studio")
     parser.add_argument("--output-dir", default=str(repo_root / "dist"), help="Cartella output artefatti")
-    parser.add_argument("--version", default="1.0.0", help="Versione pacchetti release")
+    parser.add_argument("--version", default="1.1.0", help="Versione pacchetti release")
     parser.add_argument("--skip-gradle", action="store_true", help="Salta la build Gradle e usa eventuali JAR gia presenti")
     parser.add_argument("--skip-validate", action="store_true", help="Salta validate_labpbr.py --strict")
     args = parser.parse_args()

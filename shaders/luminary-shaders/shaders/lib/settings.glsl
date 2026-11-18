@@ -11,6 +11,7 @@
 #define DYNAMIC_PUDDLES
 #define SSR_ENABLED
 #define VOLUMETRIC_LIGHT
+#define WATER_CAUSTICS
 
 #define AO_QUALITY 1 // [0 1 2]
 #define POM_DEPTH 0.06 // [0.02 0.04 0.06 0.08]

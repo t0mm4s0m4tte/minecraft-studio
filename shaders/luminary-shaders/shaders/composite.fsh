@@ -243,19 +243,36 @@ void main() {
     vec4 normalData = texture(colortex1, vTexCoord);
     vec4 pbrData = texture(colortex2, vTexCoord);
     float depth = texture(depthtex0, vTexCoord).r;
+    float opaqueDepth = texture(depthtex1, vTexCoord).r;
     float effectiveRain = max(wetness, rainStrength);
 
     float smoothness = pbrData.r;
     float isMetal = pbrData.g;
     float emissive = pbrData.a;
 
+    vec3 N = normalize(normalData.xyz * 2.0 - 1.0);
     vec3 color = baseColor.rgb;
+
+#ifdef WATER_CAUSTICS
+    // Micro-rifrazione screen-space (Snell UV offset) sui pixel d'acqua (depthtex0 < depthtex1)
+    bool isWaterPixel = (depth < opaqueDepth - 0.0001) && (abs(pbrData.b - (64.0 / 255.0)) < 0.025);
+    if (isWaterPixel) {
+        float waterThickness = clamp((opaqueDepth - depth) * 24.0, 0.0, 1.0);
+        vec2 refractUV = clamp(vTexCoord + N.xy * (0.018 * waterThickness), 0.002, 0.998);
+        float refractOpaqueDepth = texture(depthtex1, refractUV).r;
+        // Clamp di sicurezza: campiona solo se il pixel rifratto è dietro la superficie dell'acqua
+        if (refractOpaqueDepth > depth + 0.0001) {
+            vec3 refractedCol = texture(colortex0, refractUV).rgb;
+            color = mix(color, refractedCol, 0.35 * waterThickness);
+        }
+    }
+#endif
+
     vec2 screenCoord = vTexCoord * vec2(max(viewWidth, 1280.0), max(viewHeight, 720.0));
     float dither = bayer4x4(screenCoord);
 
     // Ricostruzione View-Space
     vec3 viewPos = reconstructViewPos(vTexCoord, depth);
-    vec3 N = normalize(normalData.xyz * 2.0 - 1.0);
 
     // 1. Screen-Space Reflections (SSR) per superfici dielettriche/metalliche lisce o bagnate (smoothness > 0.65)
     if (depth < 0.9999 && smoothness > 0.65) {

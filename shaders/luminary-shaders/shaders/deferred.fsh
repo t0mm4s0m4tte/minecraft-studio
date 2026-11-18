@@ -16,6 +16,7 @@ uniform sampler2D colortex2; // LabPBR Data (R=Smoothness, G=Metal, B=Porosity/S
 uniform sampler2D depthtex0;
 
 uniform mat4 gbufferProjectionInverse;
+uniform mat4 gbufferModelViewInverse;
 uniform vec3 sunPosition;
 uniform vec3 upPosition;
 uniform float viewWidth;
@@ -24,6 +25,8 @@ uniform float near;
 uniform float far;
 uniform float wetness;
 uniform float rainStrength;
+uniform int moonPhase;
+uniform int worldTime;
 
 in vec2 vTexCoord;
 
@@ -35,16 +38,20 @@ float linearizeDepth(float d) {
     return (2.0 * near * far) / max(far + near - z_n * (far - near), 0.0001);
 }
 
-vec3 computeAtmosphericSky(vec3 viewDir, vec3 upDir, vec3 sunDir, float rain) {
+vec3 computeAtmosphericSky(vec3 viewDir, vec3 worldDir, vec3 upDir, vec3 sunDir, float rain) {
     float vDotUp = dot(viewDir, upDir);
     float vDotSun = clamp(dot(viewDir, sunDir), 0.0, 1.0);
     float sunElevation = clamp(dot(sunDir, upDir) * 0.5 + 0.5, 0.0, 1.0);
 
+    // Modulazione fase lunare (0 = luna piena, 4 = luna nuova)
+    float moonPhaseFactor = 0.5 + 0.5 * cos(float(moonPhase) * 0.78539816);
+    float moonBoost = mix(0.65, 1.35, moonPhaseFactor);
+
     // Scattering di Rayleigh (zenith blu profondo -> orizzonte azzurro latteo)
     vec3 zenithDay  = vec3(0.11, 0.30, 0.78);
     vec3 horizonDay = vec3(0.46, 0.70, 0.98);
-    vec3 zenithNight  = vec3(0.01, 0.02, 0.06);
-    vec3 horizonNight = vec3(0.04, 0.07, 0.14);
+    vec3 zenithNight  = vec3(0.01, 0.02, 0.06) * moonBoost;
+    vec3 horizonNight = vec3(0.04, 0.07, 0.14) * moonBoost;
 
     vec3 zenith  = mix(zenithNight, zenithDay, sunElevation);
     vec3 horizon = mix(horizonNight, horizonDay, sunElevation);
@@ -53,15 +60,32 @@ vec3 computeAtmosphericSky(vec3 viewDir, vec3 upDir, vec3 sunDir, float rain) {
     vec3 sky = mix(zenith, horizon, horizonFactor);
 
     // Scattering di Mie (alone solare anisotropo):
-    // Esponente più stretto (64..256) per evitare che il disco solare diventi una palla gigante di 50 gradi,
-    // e modulazione durante la pioggia (cielo coperto e luce diffusa).
     float mieGlow = pow(vDotSun, 32.0) * 0.18 + pow(vDotSun, 256.0) * 0.65;
     vec3 sunTint = mix(vec3(1.2, 0.45, 0.15), vec3(1.3, 1.25, 1.10), sunElevation);
     float sunVisibility = mix(1.0, 0.15, rain);
     sky += sunTint * (mieGlow * sunElevation * sunVisibility);
 
-    // Cielo plumbeo/grigio desaturato durante la pioggia
+    // Volta stellata procedurale ancorata a worldDir (visibile di notte con cielo sereno)
+    if (sunElevation < 0.35 && rain < 0.8 && vDotUp > 0.02) {
+        float nightVis = smoothstep(0.35, 0.12, sunElevation) * (1.0 - smoothstep(0.35, 0.8, rain)) * smoothstep(0.02, 0.25, vDotUp);
+        vec3 starGrid = floor(worldDir * 240.0);
+        float starHash = fract(sin(dot(starGrid, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+        if (starHash > 0.9965) {
+            vec3 starCellCenter = normalize(starGrid + 0.5);
+            float distToStar = length(worldDir - starCellCenter) * 240.0;
+            float starCore = smoothstep(0.45, 0.05, distToStar);
+            float twinkle = 0.75 + 0.25 * sin(float(worldTime) * 0.06 + starHash * 62.83);
+            vec3 starColor = mix(vec3(0.75, 0.85, 1.0), vec3(1.0, 0.92, 0.78), fract(starHash * 31.7));
+            sky += starColor * (starCore * twinkle * nightVis * 1.4);
+        }
+    }
+
+    // Cielo plumbeo/grigio desaturato durante la pioggia + bagliore freddo da temporale
     vec3 rainSky = mix(vec3(0.12, 0.14, 0.18), vec3(0.38, 0.42, 0.48), sunElevation);
+    if (rainStrength > 0.85) {
+        float stormFlash = pow(max(sin(float(worldTime) * 0.37) * cos(float(worldTime) * 0.19), 0.0), 18.0);
+        rainSky += vec3(0.45, 0.58, 0.82) * stormFlash * 0.85;
+    }
     sky = mix(sky, rainSky, rain * 0.85);
 
     return sky;
@@ -81,10 +105,11 @@ void main() {
 
     vec3 upDir = normalize(upPosition);
     vec3 sunDir = normalize(sunPosition);
+    vec3 worldDir = normalize((gbufferModelViewInverse * vec4(viewDir, 0.0)).xyz);
 
     // Se è cielo (depth >= 0.9999), applica scattering Rayleigh + Mie preservando sole/stelle
     if (depth >= 0.9999) {
-        vec3 atmoSky = computeAtmosphericSky(viewDir, upDir, sunDir, effectiveRain);
+        vec3 atmoSky = computeAtmosphericSky(viewDir, worldDir, upDir, sunDir, effectiveRain);
         // Preserva eventuale disco solare / stelle già disegnati in baseColor
         float baseLuma = dot(baseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
         vec3 finalSky = mix(atmoSky, max(baseColor.rgb, atmoSky), clamp((baseLuma - 0.35) * 2.0, 0.0, 1.0) * (1.0 - effectiveRain * 0.75));
@@ -119,7 +144,9 @@ void main() {
     float fogStart = mix(48.0, 24.0, effectiveRain);
     float fogFactor = clamp(1.0 - exp(-max(dist - fogStart, 0.0) * fogDensity), 0.0, mix(0.65, 0.85, effectiveRain));
     if (fogFactor > 0.001) {
-        vec3 horizonFog = computeAtmosphericSky(normalize(vec3(viewDir.x, 0.05, viewDir.z)), upDir, sunDir, effectiveRain);
+        vec3 horizonFogDir = normalize(vec3(viewDir.x, 0.05, viewDir.z));
+        vec3 horizonWorldDir = normalize((gbufferModelViewInverse * vec4(horizonFogDir, 0.0)).xyz);
+        vec3 horizonFog = computeAtmosphericSky(horizonFogDir, horizonWorldDir, upDir, sunDir, effectiveRain);
         sceneColor = mix(sceneColor, horizonFog, fogFactor);
     }
 

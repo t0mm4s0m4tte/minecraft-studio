@@ -1,6 +1,6 @@
 # TECHNICAL ARCHITECTURE CONTRACT (TAC) — MINECRAFT STUDIO SUITE
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
-**Spec Version**: 1.0.0-FROZEN  
+**Spec Version**: 1.1.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
 **Authors**: `mc-pipeline-architect` in collaborazione con `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
 
@@ -79,5 +79,5 @@ Mappatura `shaders/block.properties`:
 ## 4. Criteri di Accettazione Stadio per Stadio
 1. **Stadio 2 (Mod)**: `./gradlew build test` (JDK 21) verde su Fabric e NeoForge, zero riferimenti client in common, Mixin attivi su `LevelRenderer`/Sodium, zero codice morto.
 2. **Stadio 3 (Pack)**: Zero sottocartelle spurie in `assets/`, `texture.properties` presente, canali LabPBR 1.3 conformi, `validate_labpbr.py --strict` 100% PASS, test unittari Python verdi.
-3. **Stadio 4 (Shader)**: Pipeline Deferred (`deferred.fsh`), linearizzazione sRGB, LabPBR esatto con tabella metalli, acqua world-space analitica con Beer-Lambert, shadow con distorsione e texel snapping, bloom mipmap + AgX tone mapping.
+3. **Stadio 4 (Shader v1.1.0)**: Pipeline Deferred (`deferred.fsh`), linearizzazione sRGB, LabPBR esatto con tabella metalli, Rain Wetness & Dynamic Puddles guidati da porosità `_s.b` (`0..64`), acqua world-space analitica con Beer-Lambert, caustiche subacquee & rifrazione Snell, SSR View-Space con binary refinement & edge fade, Volumetric Godrays con dithering Bayer 4x4, Starfield world-space & `moonPhase`, bloom mipmap + Khronos PBR Neutral tone mapping.
 4. **Stadio 5 (QA Gate)**: Tutti e 6 gli assi `>= 8/10`, verdetto `PASS`.

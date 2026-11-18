@@ -4,8 +4,11 @@
  * Luminary Shaders - gbuffers_water.fsh
  * Acqua in World-Space a 3 ottave Gerstner/FBM, ricostruzione normale nel piano XZ del mondo,
  * lettura profondità fondale (depthtex1) per vera attenuazione esponenziale di Beer-Lambert,
+ * caustiche solari subacquee animate in world-space,
  * Fresnel fisico di Schlick (F0 = 0.02) e riflesso speculare GGX del disco solare.
  */
+
+#include "/lib/settings.glsl"
 
 uniform sampler2D gtexture;
 uniform sampler2D lightmap;
@@ -52,6 +55,18 @@ float evaluateWaveHeight(vec2 xz, float t) {
     return (w1 + w2 + w3 + w4) * 0.085;
 }
 
+#ifdef WATER_CAUSTICS
+// Reticolo caustico procedurale 2D in World-Space (interferenza a 2 strati sfasati)
+float evaluateCaustics(vec2 xz, float t) {
+    vec2 p1 = xz * 1.85 + vec2(t * 0.38, -t * 0.27);
+    vec2 p2 = xz * 2.15 + vec2(-t * 0.31, t * 0.42);
+    float c1 = abs(sin(p1.x + sin(p1.y * 1.3 + t * 0.6)) + cos(p1.y + cos(p1.x * 1.1 - t * 0.5)));
+    float c2 = abs(sin(p2.x * 1.2 - cos(p2.y * 1.4 - t * 0.4)) + cos(p2.y * 1.3 + sin(p2.x * 0.9 + t * 0.7)));
+    float net = pow(clamp(1.0 - min(c1, c2) * 0.48, 0.0, 1.0), 3.2);
+    return net;
+}
+#endif
+
 void main() {
     vec4 rawAlbedo = texture(gtexture, vTexCoord) * vColor;
     if (rawAlbedo.a < 0.05) discard;
@@ -87,6 +102,17 @@ void main() {
     vec3 shallowColor = mix(vec3(0.06, 0.36, 0.44), linearAlbedo * 1.15, 0.45);
     vec3 deepColor    = vec3(0.012, 0.075, 0.17);
     vec3 waterBodyColor = mix(deepColor, shallowColor, transmittance) * light;
+
+#ifdef WATER_CAUSTICS
+    if (waterColumnDepth > 0.05 && waterColumnDepth < 18.0) {
+        vec3 sunDirWorld = normalize(sunPosition);
+        // Proiezione del fondale lungo la direzione della luce celeste per caustiche ancorate al terreno sommerso
+        vec2 floorWorldXZ = worldPos.xz - sunDirWorld.xz * (waterColumnDepth / max(abs(sunDirWorld.y), 0.25));
+        float caustics = evaluateCaustics(floorWorldXZ, t);
+        float depthFade = smoothstep(0.05, 0.45, waterColumnDepth) * exp(-waterColumnDepth * 0.14);
+        waterBodyColor += vec3(0.55, 0.85, 0.95) * caustics * depthFade * transmittance * vLmCoord.y * 0.65;
+    }
+#endif
 
     // 4. Fresnel Schlick per acqua (indice di rifrazione n=1.333 -> F0 = 0.02)
     vec3 V = normalize(-vViewPos);
