@@ -1,32 +1,40 @@
-# CLAUDE.md — minecraft-studio (Trittico Sinergico)
+# CLAUDE.md — minecraft-studio (Synergic Triptych)
 
-Studio grafico e modding Minecraft per la pipeline ad alte prestazioni basata su Iris + Sodium.
+High-performance graphics and modding studio for Minecraft built on the Iris + Sodium pipeline.
 
-## Stack Tecnologico
+## Tech Stack
 - **Minecraft**: 1.21.1 (Java Edition LTS)
 - **Java**: 21 (Temurin-21)
 - **Mod Framework**: Architectury Loom (Multi-loader: Fabric 1.21.1 + NeoForge 1.21.1)
 - **Shaders Pipeline**: Iris / Sodium GLSL (`#version 330 compatibility`)
 - **PBR Standard**: LabPBR 1.3 (`pbr.format = lab_pbr_1_3`)
-- **Performance Budget**: `<= 3.8 ms` frame time GPU sul profilo `Balanced` (default)
+- **Performance Budget**: `<= 3.8 ms` GPU frame time on `Balanced` profile (default)
 
-## Architettura del Trittico
-1. **`mods/ambient-luminescence`**: Mod multi-loader per illuminazione dinamica per-entity e held-item con propagazione lag-free e zero allocazioni per-frame.
-2. **`packs/aetheria-labpbr-32x`**: Resource pack texture 32x32 RGBA con canali normali, AO, roughness, metallic, emission conformi a LabPBR 1.3.
-3. **`shaders/luminary-shaders`**: Shader pack Iris nativo con normal mapping TBN, BRDF dielettrico/metallico, bloom emissivo e profili prestazionali (`Potato`, `Balanced`, `Cinematic`).
+## Triptych Architecture
+1. **`mods/ambient-luminescence`**: Multi-loader mod for per-entity and held-item dynamic lighting with zero per-frame allocations.
+2. **`packs/aetheria-labpbr-32x`**: 32x32 RGBA texture pack with normals, AO, roughness, metallic, and emission channels strictly compliant with LabPBR 1.3.
+3. **`shaders/luminary-shaders`**: Native Iris shader pack with TBN normal mapping, dielectric/metallic BRDF, emissive bloom, SSR, volumetric godrays, and 3 performance profiles (`Potato`, `Balanced`, `Cinematic`).
 
-## Comandi Operativi
+## Operational Commands
 ```bash
-# Validazione Asset LabPBR (Strict subset)
+# Validate LabPBR Assets (Strict 60-block subset)
 python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict
 
-# Compilazione Mod (Fabric + NeoForge)
+# Compile Mod (Fabric + NeoForge)
 cd mods/ambient-luminescence
 ./gradlew build
-# Su Windows se necessario:
+# On Windows PowerShell if needed:
 .\gradlew.bat build
+
+# Run Packager Unit Tests
+python -m unittest discover -s tests -v
+
+# Build Release Distribution (.zip / .jar in dist/)
+python scripts/package_release.py --skip-gradle
 ```
 
-## Riferimento Agenti Specialisti
-Per la guida stilistica, architetturale e review dei ruoli specialistici, fare riferimento ai prompt di studio in:
-`C:\Users\tommy\OneDrive\Documenti\Claude\my-office\prompts\` (es. `game-designer.md`, `engineering-software-architect.md`, `technical-artist.md`).
+## Architecture & Specialized Guidelines
+For technical contracts and design specifications, refer to:
+- `docs/TECHNICAL_CONTRACT.md` (SSoT Architecture Contract)
+- `docs/HANDOVER_NOTE.md` (Release status & handover log)
+- Studio prompt roles in `C:\Users\tommy\OneDrive\Documenti\Claude\my-office\prompts\` (e.g. `game-designer.md`, `engineering-software-architect.md`, `technical-artist.md`).

@@ -2,24 +2,24 @@
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
 **Spec Version**: 1.1.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
-**Authors**: `mc-pipeline-architect` in collaborazione con `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
+**Authors**: `mc-pipeline-architect` in collaboration with `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
 
 ---
 
-## 1. Matrix di Compatibilità Runtime & Toolchain
+## 1. Runtime & Toolchain Compatibility Matrix
 - **Minecraft**: 1.21.1 Java Edition
 - **Java Virtual Machine**: JDK 21 (Temurin-21 / GraalVM CE 21, toolchain enforced)
 - **Mod Architecture**: Architectury Loom multi-loader (`:common`, `:fabric`, `:neoforge`)
 - **Fabric Loader**: `>= 0.16.5` (Fabric API `>= 0.100.0+1.21.1`)
 - **NeoForge**: `21.1.65+`
-- **Graphics Framework**: Sodium `0.6.x` (o `0.5.11+`) + Iris `1.8.x` (o `1.7.x`)
+- **Graphics Framework**: Sodium `0.6.x` (or `0.5.11+`) + Iris `1.8.x` (or `1.7.x`)
 - **PBR Standard**: LabPBR 1.3 Strict (`pbr.format = lab_pbr_1_3`)
 
 ---
 
-## 2. Contratto Cross-Layer Trittico (Mod ↔ Resource Pack ↔ Shader Pack)
+## 2. Cross-Layer Triptych Contract (Mod ↔ Resource Pack ↔ Shader Pack)
 
-### 2.1. Buffer di Rendering Iris & Formati HDR (`shaders.properties`)
+### 2.1. Iris Rendering Buffers & HDR Formats (`shaders.properties`)
 ```properties
 pbr.format = lab_pbr_1_3
 colortex0.format = RGBA16F
@@ -28,56 +28,56 @@ colortex2.format = RGBA8
 colortex3.format = RGBA16F
 ```
 - **`colortex0`**:
-  - G-Buffers stage: Albedo linearizzata `sRGB -> Linear` (`pow(rgb, 2.2)`), Alpha cutout/transparency.
-  - Deferred & Composite stage: Scena HDR Linear Light accumulata (Direct + Ambient + Specular + Dynamic Light).
+  - G-Buffers stage: Linearized Albedo `sRGB -> Linear` (`pow(rgb, 2.2)`), Alpha cutout/transparency.
+  - Deferred & Composite stage: Accumulated HDR Linear Light scene (Direct + Ambient + Specular + Dynamic Light).
 - **`colortex1`**:
-  - G-Buffers stage: Normal Vector (RGB in view/tangent space mappato `[-1..1]`) + Material AO nel canale Alpha (o codifica Packed Normal + AO).
+  - G-Buffers stage: Normal Vector (RGB in view/tangent space mapped `[-1..1]`) + Material AO in Alpha channel (or Packed Normal + AO encoding).
 - **`colortex2`**:
-  - G-Buffers stage: Dati fisici LabPBR 1.3:
+  - G-Buffers stage: LabPBR 1.3 physical channels:
     - `R`: Smoothness (`0..255`, $Roughness = (1.0 - S/255.0)^2$)
-    - `G`: Reflectance / F0 dielettrico o ID metallo tabellato (`0..229` $\rightarrow F_0 = (G/255)^2$; `230..237` metalli; `255` custom metal)
-    - `B`: Porosità / SSS (`0..64` porosità pioggia; `65..255` Subsurface Scattering)
-    - `A`: Emissività (`1..254` scala lineare, `0` e `255` spenta)
+    - `G`: Reflectance / Dielectric F0 or hardcoded metal table ID (`0..229` $\rightarrow F_0 = (G/255)^2$; `230..237` metals; `255` custom metal)
+    - `B`: Porosity / SSS (`0..64` rain porosity; `65..255` Subsurface Scattering)
+    - `A`: Emissive (`1..254` linear scale, `0` and `255` disabled)
 - **`colortex3`**:
-  - Bloom highlights isolati (pre-downsampling mipmap pyramid) + dati ausiliari lightmap.
+  - Isolated Bloom highlights (pre-downsampling mipmap pyramid) + lightmap auxiliary data.
 
-### 2.2. Protocollo Bridge Luci Dinamiche (`ambient-luminescence` ↔ `luminary-shaders`)
-- **Canale Primario (Vanilla & Sodium Pipeline)**:
-  - `ambient-luminescence` inietta la luminanza dinamica direttamente in `LightDataAccess` (Sodium) e `LevelRenderer.getLightColor` (Vanilla fallback).
-  - Le coordinate sono calcolate in lock-free con snapshot immutabile atomico e dirtying selettivo delle sezioni chunk (`SectionPos`).
-- **Canale Secondario (Shader Pack Iris Uniforms)**:
-  - Iris espone nativamente `heldBlockLightValue` e `heldBlockLightValue2`.
-  - Lo shader pack campiona sia la lightmap vanilla/sodium modulata dal mod (che illumina item a terra, mob e player circostanti), sia gestisce un falloff dinamico locale sui pixel vicini alla camera senza doppie somme di energia.
+### 2.2. Dynamic Lighting Bridge Protocol (`ambient-luminescence` ↔ `luminary-shaders`)
+- **Primary Channel (Vanilla & Sodium Pipeline)**:
+  - `ambient-luminescence` injects dynamic luminance directly into `LightDataAccess` (Sodium) and `LevelRenderer.getLightColor` (Vanilla fallback).
+  - Coordinates are evaluated lock-free using an immutable atomic snapshot with selective chunk section dirtying (`SectionPos`).
+- **Secondary Channel (Shader Pack Iris Uniforms)**:
+  - Iris natively provides `heldBlockLightValue` and `heldBlockLightValue2`.
+  - The shader pack samples both the mod-driven lightmap (illuminating dropped items, mobs, and surrounding players) and applies a subtle local falloff for near-camera pixels without dual-energy compounding.
 
-### 2.3. Nomi Canonici MC 1.21.1 & Mappatura Texture / IPBR
-Tutte le texture devono corrispondere ai nomi effettivi del jar vanilla MC 1.21.1:
-- `tuff_bricks.png`, `chiseled_tuff.png`, `polished_tuff.png`, `chiseled_tuff_bricks.png` (sostituisce il non-esistente `tuff_tiles`).
-- `torch.png` e `soul_torch.png` (usati sia per torcia a terra che a parete; `wall_torch` rimosso).
-- `trial_spawner_side_inactive.png`, `trial_spawner_side_active.png` (sostituisce `trial_spawner_side`).
+### 2.3. Canonical MC 1.21.1 Texture Naming & IPBR Fallback
+All textures match the actual vanilla MC 1.21.1 jar names:
+- `tuff_bricks.png`, `chiseled_tuff.png`, `polished_tuff.png`, `chiseled_tuff_bricks.png` (replaces non-existent `tuff_tiles`).
+- `torch.png` and `soul_torch.png` (used for both ground and wall torches; `wall_torch` removed).
+- `trial_spawner_side_inactive.png`, `trial_spawner_side_active.png` (replaces `trial_spawner_side`).
 - `crafter_top.png`, `crafter_top_triggered.png`, `crafter_side.png`, `crafter_bottom.png`.
 - `copper_bulb.png`, `copper_bulb_lit.png`, `copper_bulb_powered.png`, `copper_bulb_lit_powered.png`.
 
-Mappatura `shaders/block.properties`:
-- Assegna ID univoci per fallback IPBR a torce, lanterne, metalli (ferro, oro, rame) e vegetazione quando il texture pack è parziale o assente.
+Mapping in `shaders/block.properties`:
+- Assigns unique IDs for IPBR fallback to torches, lanterns, metals (iron, gold, copper) and foliage when texture pack is partial or absent.
 
 ---
 
-## 3. Budget Hardware & Prestazioni
-- **Frame time GPU (profilo `Balanced` a 1080p su GPU midrange)**:
+## 3. Hardware & Performance Budget
+- **GPU Frame Time (`Balanced` profile at 1080p on midrange hardware)**:
   - `shadow`: `<= 0.8 ms`
   - `gbuffers_*`: `<= 0.8 ms`
-  - `deferred` (BRDF + Shadow Sampling): `<= 1.2 ms`
-  - `composite*` (Acqua world-space, SSR, Bloom downsample): `<= 0.6 ms`
-  - `final` (Bloom upsample, AgX Tone Mapping, Dither): `<= 0.4 ms`
-  - **Budget Totale GPU**: `<= 3.8 ms` ($> 144\text{ fps}$).
+  - `deferred` (BRDF + Shadow Sampling + Sky): `<= 1.2 ms`
+  - `composite*` (World-Space Water, SSR, Godrays, Bloom downsample): `<= 0.6 ms`
+  - `final` (Bloom upsample, Tone Mapping, Dithering): `<= 0.4 ms`
+  - **Total GPU Budget**: `<= 3.8 ms` ($> 144\text{ fps}$).
 - **CPU Render Loop**:
-  - **Zero Allocazioni per-frame**: divieto di `new BlockPos`, `new Vec3`, stream lambda o boxing Integer nel loop di tick/rendering.
-  - Uso esclusivo di FastUtil primitive maps (`Reference2IntOpenHashMap`, `Long2IntOpenHashMap`) o pool thread-safe.
+  - **Zero Per-Frame Allocations**: strict prohibition of `new BlockPos`, `new Vec3`, stream lambdas, or Integer boxing inside the tick/render loop.
+  - Exclusive use of FastUtil primitive maps (`Reference2IntOpenHashMap`, `Long2IntOpenHashMap`) or thread-safe pools.
 
 ---
 
-## 4. Criteri di Accettazione Stadio per Stadio
-1. **Stadio 2 (Mod)**: `./gradlew build test` (JDK 21) verde su Fabric e NeoForge, zero riferimenti client in common, Mixin attivi su `LevelRenderer`/Sodium, zero codice morto.
-2. **Stadio 3 (Pack)**: Zero sottocartelle spurie in `assets/`, `texture.properties` presente, canali LabPBR 1.3 conformi, `validate_labpbr.py --strict` 100% PASS, test unittari Python verdi.
-3. **Stadio 4 (Shader v1.1.0)**: Pipeline Deferred (`deferred.fsh`), linearizzazione sRGB, LabPBR esatto con tabella metalli, Rain Wetness & Dynamic Puddles guidati da porosità `_s.b` (`0..64`), acqua world-space analitica con Beer-Lambert, caustiche subacquee & rifrazione Snell, SSR View-Space con binary refinement & edge fade, Volumetric Godrays con dithering Bayer 4x4, Starfield world-space & `moonPhase`, bloom mipmap + Khronos PBR Neutral tone mapping.
-4. **Stadio 5 (QA Gate)**: Tutti e 6 gli assi `>= 8/10`, verdetto `PASS`.
+## 4. Stage-by-Stage Acceptance Criteria
+1. **Stage 2 (Mod)**: `./gradlew build test` (JDK 21) passes on Fabric and NeoForge, zero client class references in common, active Mixin hooks on `LevelRenderer`/Sodium, zero dead code.
+2. **Stage 3 (Pack)**: Zero untracked subdirectories in `assets/`, valid `texture.properties`, compliant LabPBR 1.3 channels, `validate_labpbr.py --strict` 100% PASS, Python unit tests green.
+3. **Stage 4 (Shaders v1.1.0)**: Deferred pipeline (`deferred.fsh`), sRGB linearization, accurate LabPBR specular tables, Rain Wetness & Dynamic Puddles driven by porosity `_s.b` (`0..64`), analytical world-space water with Beer-Lambert, underwater caustics & Snell refraction, View-Space SSR with binary refinement & edge fade, Volumetric Godrays with Bayer 4x4 dither, world-space Starfield & `moonPhase`, dedicated `gbuffers_weather` stage with camera near-fade, bloom mipmap + Khronos PBR Neutral tone mapping.
+4. **Stage 5 (QA Gate)**: All 6 axes `>= 8/10`, binary `PASS` verdict.

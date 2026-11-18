@@ -1,57 +1,73 @@
-# Minecraft Java Studio — Trittico Sinergico (1.21.1)
+# Minecraft Java Studio — Synergic Triptych (1.21.1)
 
 ![Minecraft Studio 1.21.1 Triptych Hero Banner](docs/branding/minecraft_studio_hero_banner.png)
 
 [![Build Multi-Loader & Validate Assets](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml/badge.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml)
 
-Suite modulare per **Minecraft Java Edition 1.21.1** costruita attorno alla pipeline **Iris + Sodium** e allo standard **LabPBR 1.3**, progettata per offrire luci dinamiche leggere, materiali PBR 32x coerenti e configurazione zero-click tra resource pack e shader.
+A high-performance modular graphics and modding suite for **Minecraft Java Edition 1.21.1**, designed around the **Iris + Sodium** pipeline and the **LabPBR 1.3** standard. It delivers lag-free dynamic lighting, a complete 32x PBR texture collection, and zero-click integration between resource pack and custom shaders.
 
-## Componenti del Trittico
+---
 
-| Icona | Modulo | Percorso | Ruolo | Target |
+## The Triptych Components
+
+| Icon | Module | Path | Role | Technical Target |
 |---|---|---|---|---|
-| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Mod client multi-loader (Fabric + NeoForge) per luci dinamiche su player, item a terra e blocchi Trial Chambers 1.21 | Java 21, zero allocazioni per frame |
-| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | Resource pack 32x32 RGBA con normal, AO, height (`_n`), smoothness, F0/metalness, porosity ed emissività (`_s`) su 1.015 blocchi e 605 item (4.860 PNG) | Copertura 100% MC 1.21.1 (`--strict` 60/60) |
-| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Shader pack Iris GLSL (`#version 330 compatibility`) con GGX PBR, onde Beer-Lambert, POM 3D e 3 profili | Budget target `<= 3.8 ms` GPU su `Balanced` |
+| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Multi-loader client mod (Fabric + NeoForge) for dynamic lighting on players, dropped items, and Trial Chambers 1.21 blocks | Java 21, zero per-frame allocations |
+| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | 32x32 RGBA resource pack with normals, AO, height (`_n`), smoothness, F0/metalness, porosity and emissives (`_s`) across 1,015 blocks and 605 items (4,860 PNGs) | 100% MC 1.21.1 coverage (`--strict` 60/60 PASS) |
+| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Iris GLSL shader pack (`#version 330 compatibility`) with GGX PBR, Beer-Lambert water waves, 3D POM, SSR, volumetric godrays, and dedicated weather stage | Target budget `<= 3.8 ms` GPU on `Balanced` |
 
-## Profili Shader (v1.1.0)
+---
 
-| Profilo | Ombre & Specular GGX | LabPBR 1.3 & Rain Wetness | SSR & Volumetric Godrays | Water Caustics & Snell | POM & AO |
+## Shader Profiles (v1.1.0)
+
+| Profile | Shadows & GGX Specular | LabPBR 1.3 & Rain Wetness | SSR & Volumetric Godrays | Water Caustics & Snell | POM & AO |
 |---|---|---|---|---|---|
-| **Potato** | Disattivo | Disattivo | Off (`0`) | Disattivo | Off (`0`) |
-| **Balanced** *(Default)* | Attivo | Attivo (`Puddles` inclusi) | `12 step` SSR + `8 step` Godrays | Attivo | `10 step` POM + Micro-AO (`1`) |
-| **Cinematic** | Attivo | Attivo (`Puddles` inclusi) | `24 step` SSR + `16 step` Godrays | Attivo | `16 step` POM + Screen Cavity (`2`) |
+| **Potato** | Disabled | Disabled | Off (`0`) | Disabled | Off (`0`) |
+| **Balanced** *(Default)* | Enabled | Enabled (`Puddles` included) | `12-step` SSR + `8-step` Godrays | Enabled | `10-step` POM + Micro-AO (`1`) |
+| **Cinematic** | Enabled | Enabled (`Puddles` included) | `24-step` SSR + `16-step` Godrays | Enabled | `16-step` POM + Screen Cavity (`2`) |
 
-## Requisiti & Installazione Rapida
+---
 
-- **Minecraft**: `1.21.1`
-- **Java**: `21` (Temurin consigliato)
-- **Mod richieste**: Fabric Loader `>= 0.16.5` + Fabric API (oppure NeoForge `21.1.65+`) con **Sodium** e **Iris**
+## Requirements & Quick Installation
 
-Dopo aver generato i pacchetti in `dist/` tramite `scripts/package_release.py`:
-1. Copia `ambient_luminescence-fabric-1.0.0.jar` (o `neoforge`) in `.minecraft/mods/`.
-2. Copia `Aetheria-LabPBR-32x-1.0.0.zip` in `.minecraft/resourcepacks/` e attivalo nelle impostazioni di Minecraft.
-3. Copia `Luminary-Shaders-1.0.0.zip` in `.minecraft/shaderpacks/` e selezionalo da Iris (`Balanced` attivo di default con LabPBR 1.3 preconfigurato).
+- **Minecraft**: `1.21.1` (Java Edition)
+- **Java**: `21` (Temurin recommended)
+- **Required Mods**: Fabric Loader `>= 0.16.5` + Fabric API (or NeoForge `21.1.65+`) with **Sodium** and **Iris**
 
-## Comandi di Sviluppo, Validazione e Release
+After generating packages in `dist/` with `scripts/package_release.py`:
+1. Copy `ambient_luminescence-fabric-1.1.0.jar` (or `neoforge`) into `.minecraft/mods/`.
+2. Copy `Aetheria-LabPBR-32x-1.1.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
+3. Copy `Luminary-Shaders-1.1.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
+
+---
+
+## Development, Validation & Release Commands
 
 ```bash
-# 1. Generazione/espansione full pack 32x LabPBR 1.3 (blocchi + item + animazioni)
+# 1. Generate/expand full 32x LabPBR 1.3 pack (blocks + items + animated textures)
 python packs/aetheria-labpbr-32x/scripts/build_full_pack_32x.py
 
-# 2. Validazione rigorosa dei 60 blocchi core LabPBR 1.3 (180 PNG)
+# 2. Strict validation of 60 core LabPBR 1.3 blocks (180 PNGs)
 python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict
 
-# 3. Test automatici del packager release
+# 3. Automated release packager unit tests
 python -m unittest discover -s tests -v
 
-# 4. Compilazione mod Fabric + NeoForge (richiede JDK 21)
+# 4. Compile multi-loader mod (Fabric + NeoForge, requires JDK 21)
 cd mods/ambient-luminescence && ./gradlew build
 
-# 5. Generazione pacchetti pronti in dist/
+# 5. Build distribution packages (.zip / .jar in dist/)
 python scripts/package_release.py
 ```
 
-## Servizi B2B per Server SMP e Creator
+---
 
-Per personalizzazioni grafiche dedicate (resource pack brandizzati, preset shader ottimizzati per eventi o modpack), il listino operativo e i template di contatto sono raccolti in [docs/b2b-outreach.md](docs/b2b-outreach.md).
+## Architecture & Technical Contract
+
+Detailed architectural specifications, PBR channel encodings, Iris buffer layouts, and GPU budget constraints are documented in [docs/TECHNICAL_CONTRACT.md](docs/TECHNICAL_CONTRACT.md).
+
+---
+
+## B2B Custom Services for SMP Servers & Creators
+
+For custom graphics branding (tailored server resource packs, custom shader presets optimized for events or modpacks), check out the service tiers and contact guidelines in [docs/b2b-outreach.md](docs/b2b-outreach.md).
