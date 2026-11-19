@@ -443,7 +443,9 @@ void main() {
 
     float kD = 1.0 - isMetal * 0.72;
     vec3 diffuse = linearAlbedo * totalLight * ao * kD;
-    vec3 emissiveLight = linearAlbedo * (pow(emissive, 1.35) * 2.15);
+    // Rim-light e glow emissivo LabPBR per blocchi incandescenti (lava, shroomlight, crying obsidian, soul fire)
+    float emissiveRim = pow(1.0 - NdotV, 3.0) * emissive * 1.25;
+    vec3 emissiveLight = linearAlbedo * (pow(emissive, 1.35) * 2.15 + emissiveRim);
     vec3 finalLinearRgb = diffuse + specularColor + sssLight + emissiveLight;
 
     outColor = vec4(finalLinearRgb, rawAlbedo.a);

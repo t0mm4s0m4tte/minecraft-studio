@@ -96,6 +96,8 @@ vec3 computeAtmosphericSky(vec3 viewDir, vec3 worldDir, vec3 upDir, vec3 sunDir,
 void main() {
     vec4 baseColor = texture(colortex0, vTexCoord);
     vec4 normalData = texture(colortex1, vTexCoord);
+    vec4 pbrData = texture(colortex2, vTexCoord);
+    float emissive = pbrData.a;
     float depth = texture(depthtex0, vTexCoord).r;
     float effectiveRain = max(wetness, rainStrength);
 
@@ -156,10 +158,18 @@ void main() {
         float fogStart = mix(32.0, 16.0, effectiveRain);
         float fogFactor = clamp(1.0 - exp(-max(dist - fogStart, 0.0) * effectiveDensity), 0.0, mix(0.72, 0.92, effectiveRain));
 
+        // Nelle profondità sotterranee / dimensioni chiuse (y < 32) foschia calda/ambrata
+        float deepRealmFactor = clamp((32.0 - absoluteWorldY) / 48.0, 0.0, 1.0);
+        vec3 deepWarmTint = vec3(0.28, 0.12, 0.06);
+
+        // Le superfici emissive (lava, lanterne, bulbi) perforano la foschia lontana
+        fogFactor *= (1.0 - emissive * 0.75);
+
         if (fogFactor > 0.001) {
             vec3 horizonFogDir = normalize(vec3(viewDir.x, max(viewDir.y * 0.25, 0.02), viewDir.z));
             vec3 horizonWorldDir = normalize((gbufferModelViewInverse * vec4(horizonFogDir, 0.0)).xyz);
             vec3 horizonFog = computeAtmosphericSky(horizonFogDir, horizonWorldDir, upDir, sunDir, effectiveRain);
+            horizonFog = mix(horizonFog, max(horizonFog, deepWarmTint), deepRealmFactor * 0.45);
             sceneColor = mix(sceneColor, horizonFog, fogFactor);
         }
     }
