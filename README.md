@@ -18,13 +18,13 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 
 ---
 
-## Shader Profiles (v1.3.0)
+## Shader Profiles (v1.4.0)
 
-| Profile | Shadows & GGX Specular | LabPBR 1.3, SSS & Wetness | SSR & Volumetric Godrays | Atmosphere & Optics | POM & AO |
+| Profile | Shadows & GGX Specular | LabPBR 1.3, SSS & Wetness | SSR & Volumetric Godrays | Atmosphere, AA & Optics | POM & AO |
 |---|---|---|---|---|---|
-| **Potato** | Disabled | Disabled | Off (`0`) | Minimal / Static | Off (`0`) |
-| **Balanced** *(Default)* | Enabled | Enabled (SSS + Puddles) | `12-step` SSR + `8-step` Godrays | Auto-Exposure + Height Fog + Waving | `10-step` POM + Micro-AO (`1`) |
-| **Cinematic** | Enabled | Enabled (SSS + Puddles) | `24-step` SSR + `16-step` Godrays | Auto-Exposure + Bokeh DoF + CA + Fog | `16-step` POM + Screen Cavity (`2`) |
+| **Potato** | Disabled | Disabled | Off (`0`) | Minimal / Static (No AA) | Off (`0`) |
+| **Balanced** *(Default)* | Enabled | Enabled (SSS + Puddles) | `12-step` SSR + `8-step` Godrays | Auto-Exposure + Deep Fog + Luma-Edge AA/CAS | `10-step` POM + Micro-AO (`1`) |
+| **Cinematic** | Enabled | Enabled (SSS + Puddles) | `24-step` SSR + `16-step` Godrays | Auto-Exposure + Bokeh DoF + CA + Edge-AA + Motion Blur | `16-step` POM + Screen Cavity (`2`) |
 
 ---
 
@@ -35,9 +35,9 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 - **Required Mods**: Fabric Loader `>= 0.16.5` + Fabric API (or NeoForge `21.1.65+`) with **Sodium** and **Iris**
 
 After generating packages in `dist/` with `scripts/package_release.py`:
-1. Copy `ambient_luminescence-fabric-1.3.0.jar` (or `neoforge`) into `.minecraft/mods/`.
-2. Copy `Aetheria-LabPBR-32x-1.3.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
-3. Copy `Luminary-Shaders-1.3.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
+1. Copy `ambient_luminescence-fabric-1.4.0.jar` (or `neoforge`) into `.minecraft/mods/`.
+2. Copy `Aetheria-LabPBR-32x-1.4.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
+3. Copy `Luminary-Shaders-1.4.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
 
 ---
 
