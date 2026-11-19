@@ -27,6 +27,8 @@ uniform float wetness;
 uniform float rainStrength;
 uniform int moonPhase;
 uniform int worldTime;
+uniform int isEyeInWater;
+uniform vec3 cameraPosition;
 
 in vec2 vTexCoord;
 
@@ -138,16 +140,28 @@ void main() {
 
     vec3 sceneColor = baseColor.rgb * mix(0.88, 1.0, matAO) * ssao;
 
-    // Foschia atmosferica morbida (Aerial Perspective) oltre i 90 blocchi (più densa durante pioggia)
-    float dist = length(viewPos);
-    float fogDensity = mix(0.0045, 0.012, effectiveRain);
-    float fogStart = mix(48.0, 24.0, effectiveRain);
-    float fogFactor = clamp(1.0 - exp(-max(dist - fogStart, 0.0) * fogDensity), 0.0, mix(0.65, 0.85, effectiveRain));
-    if (fogFactor > 0.001) {
-        vec3 horizonFogDir = normalize(vec3(viewDir.x, 0.05, viewDir.z));
-        vec3 horizonWorldDir = normalize((gbufferModelViewInverse * vec4(horizonFogDir, 0.0)).xyz);
-        vec3 horizonFog = computeAtmosphericSky(horizonFogDir, horizonWorldDir, upDir, sunDir, effectiveRain);
-        sceneColor = mix(sceneColor, horizonFog, fogFactor);
+    // Aerial Perspective & Stratified Height Fog
+    // Disattivata completamente se il giocatore è sott'acqua (isEyeInWater > 0)
+    if (isEyeInWater == 0) {
+        float dist = length(viewPos);
+        vec3 worldPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
+        float absoluteWorldY = cameraPosition.y + worldPos.y;
+
+        // Ground mist stratificata nelle vallate (y < 85), più densa durante la pioggia o le prime ore del mattino
+        float heightFactor = clamp((85.0 - absoluteWorldY) / 35.0, 0.0, 1.0);
+        float baseFogDensity = mix(0.0035, 0.011, effectiveRain);
+        float mistBoost = heightFactor * mix(0.005, 0.015, effectiveRain);
+        float effectiveDensity = baseFogDensity + mistBoost;
+
+        float fogStart = mix(32.0, 16.0, effectiveRain);
+        float fogFactor = clamp(1.0 - exp(-max(dist - fogStart, 0.0) * effectiveDensity), 0.0, mix(0.72, 0.92, effectiveRain));
+
+        if (fogFactor > 0.001) {
+            vec3 horizonFogDir = normalize(vec3(viewDir.x, max(viewDir.y * 0.25, 0.02), viewDir.z));
+            vec3 horizonWorldDir = normalize((gbufferModelViewInverse * vec4(horizonFogDir, 0.0)).xyz);
+            vec3 horizonFog = computeAtmosphericSky(horizonFogDir, horizonWorldDir, upDir, sunDir, effectiveRain);
+            sceneColor = mix(sceneColor, horizonFog, fogFactor);
+        }
     }
 
     outColor = vec4(sceneColor, baseColor.a);
