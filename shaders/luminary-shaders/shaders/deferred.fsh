@@ -40,6 +40,29 @@ float linearizeDepth(float d) {
     return (2.0 * near * far) / max(far + near - z_n * (far - near), 0.0001);
 }
 
+float cloudHash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float cloudNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(cloudHash(i + vec2(0.0, 0.0)), cloudHash(i + vec2(1.0, 0.0)), u.x),
+        mix(cloudHash(i + vec2(0.0, 1.0)), cloudHash(i + vec2(1.0, 1.0)), u.x),
+        u.y
+    );
+}
+
+float cloudFBM(vec2 p) {
+    float v = 0.0;
+    v += 0.550 * cloudNoise(p); p *= 2.03;
+    v += 0.285 * cloudNoise(p); p *= 2.07;
+    v += 0.165 * cloudNoise(p);
+    return v;
+}
+
 vec3 computeAtmosphericSky(vec3 viewDir, vec3 worldDir, vec3 upDir, vec3 sunDir, float rain) {
     float vDotUp = dot(viewDir, upDir);
     float vDotSun = clamp(dot(viewDir, sunDir), 0.0, 1.0);
@@ -89,6 +112,29 @@ vec3 computeAtmosphericSky(vec3 viewDir, vec3 worldDir, vec3 upDir, vec3 sunDir,
         rainSky += vec3(0.45, 0.58, 0.82) * stormFlash * 0.85;
     }
     sky = mix(sky, rainSky, rain * 0.85);
+
+#ifdef VOLUMETRIC_CLOUDS
+    if (vDotUp > 0.03) {
+        float cloudPlaneDist = 1.0 / max(vDotUp + 0.12, 0.12);
+        vec2 windOffset = vec2(float(worldTime) * 0.0018, float(worldTime) * 0.0007);
+        vec2 cloudUV = worldDir.xz * cloudPlaneDist * 1.45 + cameraPosition.xz * 0.0015 + windOffset;
+        float n = cloudFBM(cloudUV);
+        float coverage = mix(0.46, 0.24, rain);
+        float density = smoothstep(coverage, coverage + 0.32, n);
+        float horizonFade = smoothstep(0.03, 0.22, vDotUp);
+        float cloudAlpha = density * horizonFade * 0.88;
+
+        if (cloudAlpha > 0.005) {
+            float silverLining = pow(vDotSun, 12.0) * (1.0 - density * 0.65) * 0.85;
+            vec3 cloudLit = mix(vec3(0.08, 0.11, 0.18) * moonBoost, vec3(0.96, 0.95, 0.92), sunElevation);
+            vec3 cloudShadow = mix(vec3(0.03, 0.05, 0.09) * moonBoost, vec3(0.54, 0.60, 0.70), sunElevation);
+            vec3 cloudColor = mix(cloudLit, cloudShadow, density * 0.65);
+            cloudColor += sunTint * (silverLining * sunElevation * (1.0 - rain * 0.75));
+            cloudColor = mix(cloudColor, rainSky * 0.90, rain * 0.80);
+            sky = mix(sky, cloudColor, cloudAlpha);
+        }
+    }
+#endif
 
     return sky;
 }
@@ -172,6 +218,17 @@ void main() {
             horizonFog = mix(horizonFog, max(horizonFog, deepWarmTint), deepRealmFactor * 0.45);
             sceneColor = mix(sceneColor, horizonFog, fogFactor);
         }
+    } else if (isEyeInWater == 1) {
+        float dist = length(viewPos);
+        float waterFogFactor = clamp(1.0 - exp(-dist * 0.065), 0.0, 0.94);
+        float sunElev = clamp(dot(sunDir, upDir) * 0.5 + 0.5, 0.0, 1.0);
+        vec3 underwaterFog = mix(vec3(0.008, 0.045, 0.095), vec3(0.025, 0.22, 0.34), sunElev);
+        waterFogFactor *= (1.0 - emissive * 0.60);
+        sceneColor = mix(sceneColor, underwaterFog, waterFogFactor);
+    } else if (isEyeInWater == 2) {
+        float dist = length(viewPos);
+        float lavaFogFactor = clamp(1.0 - exp(-dist * 0.45), 0.0, 0.98);
+        sceneColor = mix(sceneColor, vec3(0.85, 0.22, 0.03), lavaFogFactor);
     }
 
     outColor = vec4(sceneColor, baseColor.a);
