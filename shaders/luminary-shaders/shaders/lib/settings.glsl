@@ -16,6 +16,8 @@
 #define AUTO_EXPOSURE
 // #define DOF_ENABLED
 // #define CHROMATIC_ABERRATION
+#define AA_SHARPEN
+// #define MOTION_BLUR
 #define TONEMAP_PRESET 0 // [0 1 2]
 
 #define AO_QUALITY 1 // [0 1 2]
