@@ -35,12 +35,12 @@ void main() {
     float dist = length(vViewPos);
 
     // 1. Soft Camera Near-Fade:
-    // Dissolve gradualmente le gocce che si trovano a meno di 2.5 blocchi dagli occhi,
+    // Dissolve gradualmente le gocce che si trovano a meno di 3.0 blocchi dagli occhi,
     // eliminando l'effetto "raggi sparati in faccia" / distorsione a tunnel prospettica.
-    float nearFade = smoothstep(0.8, 2.5, dist);
+    float nearFade = smoothstep(1.0, 3.0, dist);
 
     // 2. Far Fade delicato per integrare la pioggia nella foschia lontana
-    float farFade = 1.0 - smoothstep(18.0, 32.0, dist) * 0.45;
+    float farFade = 1.0 - smoothstep(16.0, 32.0, dist) * 0.45;
 
     float alpha = tex.a * nearFade * farFade * 0.72;
     if (alpha < 0.02) discard;

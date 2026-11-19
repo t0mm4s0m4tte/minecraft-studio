@@ -22,6 +22,60 @@ VANILLA_JAR = r"C:\Users\tommy\AppData\Roaming\.minecraft\versions\1.21.1\1.21.1
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOCK_TARGET_DIR = os.path.join(BASE_DIR, "assets", "minecraft", "textures", "block")
 ITEM_TARGET_DIR = os.path.join(BASE_DIR, "assets", "minecraft", "textures", "item")
+ENV_TARGET_DIR = os.path.join(BASE_DIR, "assets", "minecraft", "textures", "environment")
+
+
+def generate_environment_textures():
+    """Generates procedural high-definition 32x rain and snow textures."""
+    import random
+    os.makedirs(ENV_TARGET_DIR, exist_ok=True)
+    width, height = 128, 512
+
+    # 1. Rain Texture: fine semi-transparent raindrops with smooth vertical fade
+    rain_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    random.seed(1337)
+    for _ in range(60):
+        cx = random.randint(0, width - 1)
+        cy = random.randint(0, height - 1)
+        streak_len = random.randint(14, 28)
+        base_alpha = random.randint(90, 160)
+        base_r, base_g, base_b = 180, 205, 235
+        for dy in range(streak_len):
+            py = (cy + dy) % height
+            progress = dy / float(streak_len - 1)
+            fade = math.sin(progress * math.pi) ** 1.2
+            a = int(base_alpha * fade)
+            if a > 0:
+                rain_img.putpixel((cx, py), (base_r, base_g, base_b, a))
+                halo_a = int(a * 0.25)
+                if halo_a > 0:
+                    rain_img.putpixel(((cx - 1) % width, py), (base_r, base_g, base_b, halo_a))
+                    rain_img.putpixel(((cx + 1) % width, py), (base_r, base_g, base_b, halo_a))
+    rain_path = os.path.join(ENV_TARGET_DIR, "rain.png")
+    rain_img.save(rain_path)
+
+    # 2. Snow Texture: soft circular microscopic snowflakes
+    snow_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    random.seed(4242)
+    for _ in range(90):
+        fx = random.randint(0, width - 1)
+        fy = random.randint(0, height - 1)
+        flake_radius = random.choice([1, 2, 2, 3])
+        max_alpha = random.randint(180, 240)
+        for dy in range(-flake_radius, flake_radius + 1):
+            for dx in range(-flake_radius, flake_radius + 1):
+                dist = math.sqrt(dx * dx + dy * dy)
+                if dist <= flake_radius:
+                    px = (fx + dx) % width
+                    py = (fy + dy) % height
+                    falloff = max(0.0, 1.0 - (dist / float(flake_radius + 0.5)))
+                    alpha = int(max_alpha * (falloff ** 1.3))
+                    if alpha > 0:
+                        cur_a = snow_img.getpixel((px, py))[3]
+                        snow_img.putpixel((px, py), (245, 250, 255, min(255, cur_a + alpha)))
+    snow_path = os.path.join(ENV_TARGET_DIR, "snow.png")
+    snow_img.save(snow_path)
+    print(f"Generated environment textures: rain.png, snow.png in {ENV_TARGET_DIR}")
 
 POM_FLAT_KEYWORDS = {
     "flower", "sapling", "grass", "fern", "vine", "lily", "rail", "ladder", "pane",
@@ -528,6 +582,7 @@ def main():
                 mcmeta_count += 1
 
     # Count actual files in target directories
+    generate_environment_textures()
     final_block_pngs = [f for f in os.listdir(BLOCK_TARGET_DIR) if f.endswith(".png")]
     final_block_albedos = [f for f in final_block_pngs if not f.endswith("_n.png") and not f.endswith("_s.png")]
     final_item_pngs = [f for f in os.listdir(ITEM_TARGET_DIR) if f.endswith(".png")]
