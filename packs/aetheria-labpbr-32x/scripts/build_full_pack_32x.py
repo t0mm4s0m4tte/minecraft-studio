@@ -18,7 +18,7 @@ import zipfile
 import numpy as np
 from PIL import Image
 
-VANILLA_JAR = r"C:\Users\tommy\AppData\Roaming\.minecraft\versions\1.21.1\1.21.1.jar"
+VANILLA_JAR = os.environ.get("MC_VANILLA_JAR", os.path.expandvars(r"%APPDATA%\.minecraft\versions\1.21.1\1.21.1.jar"))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOCK_TARGET_DIR = os.path.join(BASE_DIR, "assets", "minecraft", "textures", "block")
 ITEM_TARGET_DIR = os.path.join(BASE_DIR, "assets", "minecraft", "textures", "item")

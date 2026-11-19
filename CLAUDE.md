@@ -36,5 +36,4 @@ python scripts/package_release.py --skip-gradle
 ## Architecture & Specialized Guidelines
 For technical contracts and design specifications, refer to:
 - `docs/TECHNICAL_CONTRACT.md` (SSoT Architecture Contract)
-- `docs/HANDOVER_NOTE.md` (Release status & handover log)
-- Studio prompt roles in `C:\Users\tommy\OneDrive\Documenti\Claude\my-office\prompts\` (e.g. `game-designer.md`, `engineering-software-architect.md`, `technical-artist.md`).
+- `CHANGELOG.md` (Release history and changelog)
