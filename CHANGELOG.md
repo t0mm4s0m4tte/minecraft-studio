@@ -3,6 +3,21 @@
 All notable changes to the Minecraft Studio suite are documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [1.5.0] - 2026-11-19
+### Added
+- **Volumetric Procedural FBM Clouds (`deferred.fsh`, `lib/settings.glsl`)**: Multi-octave fractional Brownian motion cloud deck in the sky dome (`#ifdef VOLUMETRIC_CLOUDS`), animated by `worldTime` wind vector, modulated by rain density, and highlighted with anisotropic solar/lunar silver-lining forward scatter.
+- **Beer-Lambert Underwater & Lava Volumetric Fog (`deferred.fsh`)**: Physically based exponential distance absorption with deep cyan-blue marine extinction for water (`isEyeInWater == 1`) and dense fiery amber absorption for lava (`isEyeInWater == 2`).
+- **LabPBR 1.3 First-Person Hand & Held Item Shading (`gbuffers_hand.vsh`, `gbuffers_hand.fsh`)**: Full normal (`_n`) and specular (`_s`) decoding for all 605 32x items and tools; microfacet GGX/Schlick highlights on metallic weapons, handheld dynamic torchlight falloff, Fresnel rim-lighting, and real emissive output to `colortex2` (`outData`).
+- **LabPBR 1.3 Living Entity & Armor Shading (`gbuffers_entities.fsh`)**: Complete PBR metallic reflectance for iron, gold, diamond, and netherite armors, entity damage-tint blending, dynamic held light propagation, Fresnel edge rim-light, and emissive material data pass-through.
+- **Iris Configuration & Localization**: Added `VOLUMETRIC_CLOUDS` option toggle to `shaders.properties` (enabled on `Balanced` and `Cinematic`, disabled on `Potato`) with full English and Italian descriptions.
+
+## [1.4.0] - 2026-11-19
+### Added
+- **Dimensional Overhaul (Nether & The End)**: Dimensional detection via sky lightmap extinction in `composite.fsh`, volumetric Nether atmospheric dust and End void mist.
+- **Underground Ambient Light Overhaul**: Deep cave warm fog and incandescent rim-light for glowing blocks in `deferred.fsh`.
+- **Luma-Guided Edge Anti-Aliasing**: Spatial anti-aliasing pass combined with Contrast Adaptive Sharpening (CAS) in `final.fsh`.
+- **Analytical Camera Velocity Motion Blur**: 4-tap clamped directional velocity blur with reverse reprojection in `final.fsh`.
+
 ## [1.3.0] - 2026-11-19
 ### Added
 - **Dynamic Auto-Exposure**: Multi-point average luminance sampling stored in `colortex3.a` and smooth ocular gain adaptation in `final.fsh`.
