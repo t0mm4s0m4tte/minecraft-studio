@@ -3,6 +3,12 @@
 All notable changes to the Minecraft Studio suite are documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [1.6.0] - 2026-11-19
+### Added
+- **Volumetric Weather Particle Lighting & Dynamic Torch Scatter (`gbuffers_weather.fsh`)**: Physical forward-scattering Mie on rain and snow particles driven by sun/moon vector (`shadowLightPosition`), combined with quadratic handheld dynamic torchlight falloff (`heldBlockLightValue`, `heldBlockLightValue2`).
+- **Procedural Rain Splash Ripples on Dynamic Puddles (`gbuffers_terrain.fsh`)**: Procedural concentric wave propagation rings (*rain splash ripples*) perturbing the surface normal of dynamic puddles (`#ifdef DYNAMIC_PUDDLES`) during rain (`rainStrength > 0.05`).
+- **Underwater Volumetric Caustic Light Shafts (`composite.fsh`)**: Submerged crepuscular light shafts adapted to marine cyan-emerald spectrum (`vec3(0.18, 0.78, 0.95)`) with boosted volumetric depth transmission when `isEyeInWater == 1`.
+
 ## [1.5.0] - 2026-11-19
 ### Added
 - **Volumetric Procedural FBM Clouds (`deferred.fsh`, `lib/settings.glsl`)**: Multi-octave fractional Brownian motion cloud deck in the sky dome (`#ifdef VOLUMETRIC_CLOUDS`), animated by `worldTime` wind vector, modulated by rain density, and highlighted with anisotropic solar/lunar silver-lining forward scatter.
