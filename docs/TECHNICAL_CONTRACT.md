@@ -1,6 +1,6 @@
 # TECHNICAL ARCHITECTURE CONTRACT (TAC) — MINECRAFT STUDIO SUITE
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
-**Spec Version**: 1.2.0-RELEASE  
+**Spec Version**: 1.3.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
 **Authors**: `mc-pipeline-architect` in collaboration with `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
 
