@@ -2,15 +2,20 @@
 
 /*
  * Luminary Shaders - gbuffers_terrain.vsh
- * G-Buffer vertex stage con calcolo TBN Gram-Schmidt sicuro, bounds atlas e vettori mondo.
+ * G-Buffer vertex stage con calcolo TBN Gram-Schmidt sicuro, bounds atlas,
+ * vettori mondo e wind waving del fogliame (#ifdef FOLIAGE_WAVING).
  */
+
+#include "/lib/settings.glsl"
 
 attribute vec4 at_tangent;
 attribute vec4 mc_midTexCoord;
+attribute vec4 mc_Entity;
 
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
+uniform float frameTimeCounter;
 
 out vec4 vColor;
 out vec2 vTexCoord;
@@ -50,6 +55,22 @@ void main() {
     }
 
     vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
+
+#ifdef FOLIAGE_WAVING
+    // Micro-waving per foglie, erba e vegetazione organica (ID 10018 o blocco 5)
+    int blockId = int(mc_Entity.x + 0.5);
+    if (blockId == 10018 || blockId == 5) {
+        vec3 worldApprox = (gbufferModelViewInverse * viewPos).xyz;
+        float waveSpeed = frameTimeCounter * 2.2;
+        // Oscillazione sinusoidale multi-frequenza ancorata alla posizione mondo
+        float wave = sin(waveSpeed + worldApprox.x * 1.5 + worldApprox.z * 1.2) * 0.035
+                   + cos(waveSpeed * 1.4 + worldApprox.y * 2.0) * 0.02;
+        // Sposta leggermente i vertici in view-space evitando scollamenti alla base
+        viewPos.x += wave * 0.75;
+        viewPos.z += wave * 0.50;
+    }
+#endif
+
     vViewPos = viewPos.xyz;
 
     vec4 worldPos = gbufferModelViewInverse * viewPos;

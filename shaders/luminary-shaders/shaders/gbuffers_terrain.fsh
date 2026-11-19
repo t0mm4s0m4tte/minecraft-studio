@@ -397,8 +397,12 @@ void main() {
 
     if (sss > 0.01) {
         float wrapNdotL = max((dot(N, L) + 0.50) / 1.50, 0.0);
-        float backScatter = pow(clamp(dot(V, -L), 0.0, 1.0), 2.5) * 0.75;
-        sssLight = linearAlbedo * (skyOnlyLight + blockLight) * (wrapNdotL + backScatter) * sss * 0.65 * mix(vec3(0.35), vec3(1.0), shadowColor);
+        // Mie forward-scattering solare/lunare attraverso il fogliame (trasmissione back-lit)
+        float forwardScatter = pow(clamp(dot(V, -L), 0.0, 1.0), 3.0) * 1.25;
+        // Tonalità calda smeraldo/oro di trasmissione fogliame
+        vec3 foliageTint = mix(linearAlbedo, vec3(0.55, 0.85, 0.35), 0.40);
+        vec3 sssShadow = mix(vec3(0.35), vec3(1.0), shadowColor);
+        sssLight = foliageTint * (skyOnlyLight * 1.35 + blockLight * 0.8) * (wrapNdotL * 0.45 + forwardScatter) * sss * sssShadow;
     }
 
     vec3 celestialIlluminance = mix(vec3(0.48, 0.52, 0.62), vec3(1.50, 1.45, 1.36), NdotL * shadowColor);

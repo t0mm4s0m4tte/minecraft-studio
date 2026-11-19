@@ -3,8 +3,15 @@
 /*
  * Luminary Shaders - shadow.vsh
  * Shadow map pass con distorsione non-lineare (0.85) simmetrica
- * per triplicare la risoluzione effettiva vicino al giocatore senza slittamenti.
+ * per triplicare la risoluzione effettiva vicino al giocatore senza slittamenti,
+ * e foliage waving coerente (#ifdef FOLIAGE_WAVING).
  */
+
+#include "/lib/settings.glsl"
+
+attribute vec4 mc_Entity;
+uniform float frameTimeCounter;
+uniform mat4 shadowModelViewInverse;
 
 out vec4 vTexCoord;
 out vec4 vColor;
@@ -21,7 +28,20 @@ void main() {
     vColor = gl_Color;
     vTexCoord = gl_TextureMatrix[0] * gl_MultiTexCoord0;
 
-    vec4 clipPos = ftransform();
+    vec4 vertex = gl_Vertex;
+
+#ifdef FOLIAGE_WAVING
+    int blockId = int(mc_Entity.x + 0.5);
+    if (blockId == 10018 || blockId == 5) {
+        float waveSpeed = frameTimeCounter * 2.2;
+        float wave = sin(waveSpeed + vertex.x * 1.5 + vertex.z * 1.2) * 0.035
+                   + cos(waveSpeed * 1.4 + vertex.y * 2.0) * 0.02;
+        vertex.x += wave * 0.75;
+        vertex.z += wave * 0.50;
+    }
+#endif
+
+    vec4 clipPos = gl_ModelViewProjectionMatrix * vertex;
     clipPos.xyz = distortShadowClipPos(clipPos.xyz);
     gl_Position = clipPos;
 }
