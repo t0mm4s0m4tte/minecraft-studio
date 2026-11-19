@@ -38,6 +38,7 @@ uniform float near;
 uniform float far;
 uniform float wetness;
 uniform float rainStrength;
+uniform int isEyeInWater;
 
 in vec2 vTexCoord;
 
@@ -206,7 +207,7 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
     vec3 startPos = rayDir * (stepLength * dither);
 
     vec3 accumLight = vec3(0.0);
-    vec3 sunColor = vec3(1.20, 1.15, 1.05);
+    vec3 sunColor = (isEyeInWater == 1) ? vec3(0.18, 0.78, 0.95) : vec3(1.20, 1.15, 1.05);
 
     for (int i = 0; i < STEPS; i++) {
         vec3 sampleView = startPos + rayDir * (float(i) * stepLength);
@@ -231,9 +232,10 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
         }
     }
 
-    // Intensità bilanciata: 0.55 moltiplicatore base, attenuato durante la pioggia (cielo coperto)
-    float rainAtten = mix(1.0, 0.20, rain);
-    vec3 godrays = (accumLight / float(STEPS)) * (phase * 0.55 * rainAtten);
+    // Intensità bilanciata: 0.55 moltiplicatore base, attenuato durante la pioggia (cielo coperto) o potenziato sott'acqua
+    float waterBoost = (isEyeInWater == 1) ? 1.35 : 1.0;
+    float rainAtten = (isEyeInWater == 1) ? 0.85 : mix(1.0, 0.20, rain);
+    vec3 godrays = (accumLight / float(STEPS)) * (phase * 0.55 * rainAtten * waterBoost);
     return godrays;
 #endif
 }
@@ -318,8 +320,8 @@ void main() {
         color = mix(color, color + ssrColor * F, reflectionStrength);
     }
 
-    // 2. Volumetric Light / Godrays
-    if (depth > 0.0001 && effectiveRain < 0.85) {
+    // 2. Volumetric Light / Godrays & Underwater Caustic Shafts
+    if (depth > 0.0001 && (effectiveRain < 0.85 || isEyeInWater == 1)) {
         vec3 godrays = computeVolumetricLight(viewPos, depth, vTexCoord, dither, effectiveRain);
         color += godrays;
     }

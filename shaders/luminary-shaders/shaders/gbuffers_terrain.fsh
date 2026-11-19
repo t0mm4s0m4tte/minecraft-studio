@@ -29,6 +29,7 @@ uniform int shadowMapResolution;
 uniform float wetness;
 uniform float rainStrength;
 uniform int isEyeInWater;
+uniform float frameTimeCounter;
 
 in vec4 vColor;
 in vec2 vTexCoord;
@@ -217,6 +218,19 @@ float noise2D(vec2 p) {
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
+vec2 computeRainRipples(vec2 worldXZ, float time) {
+    vec2 cell = floor(worldXZ * 2.5);
+    vec2 local = fract(worldXZ * 2.5) - 0.5;
+    float h = hash2D(cell);
+    float cycle = fract(time * 1.85 + h);
+    float dist = length(local);
+    float ringRadius = cycle * 0.42;
+    float wave = sin((dist - ringRadius) * 42.0) * smoothstep(0.18, 0.0, abs(dist - ringRadius));
+    float fade = (1.0 - cycle) * smoothstep(0.45, 0.10, dist);
+    vec2 dir = local / max(dist, 0.001);
+    return dir * (wave * fade * 0.14);
+}
+
 void main() {
     vec2 coord = vTexCoord;
     vec2 ddx = dFdx(vTexCoord);
@@ -340,8 +354,13 @@ void main() {
         float puddleMask = smoothstep(accumulationThreshold, accumulationThreshold + 0.15, puddleNoise);
 
         if (puddleMask > 0.01) {
-            // Appiattimento normale verso l'alto (normale piana dell'acqua in vista)
-            vec3 flatViewUp = normalize(gl_NormalMatrix * vec3(0.0, 1.0, 0.0));
+            // Appiattimento normale verso l'alto con anelli d'impatto procedurali durante pioggia
+            vec2 rippleOffset = vec2(0.0);
+            if (rainStrength > 0.05) {
+                rippleOffset = computeRainRipples(worldAbsPos.xz, frameTimeCounter) * rainStrength * puddleMask;
+            }
+            vec3 puddleWorldUp = normalize(vec3(rippleOffset.x, 1.0, rippleOffset.y));
+            vec3 flatViewUp = normalize(gl_NormalMatrix * puddleWorldUp);
             N = normalize(mix(N, flatViewUp, puddleMask * 0.92));
             smoothness = mix(smoothness, 0.95, puddleMask);
             if (isMetal < 0.5) {
