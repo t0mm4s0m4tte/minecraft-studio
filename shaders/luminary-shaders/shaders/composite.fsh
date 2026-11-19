@@ -358,6 +358,16 @@ void main() {
     }
 #endif
 
+    // Stima multi-point della luminanza media della scena su 5 coordinate cardinali
+    vec3 lumaWeights = vec3(0.2126, 0.7152, 0.0722);
+    float avgLuma = (
+        dot(texture(colortex0, vec2(0.50, 0.50)).rgb, lumaWeights) * 0.40 +
+        dot(texture(colortex0, vec2(0.25, 0.25)).rgb, lumaWeights) * 0.15 +
+        dot(texture(colortex0, vec2(0.75, 0.25)).rgb, lumaWeights) * 0.15 +
+        dot(texture(colortex0, vec2(0.25, 0.75)).rgb, lumaWeights) * 0.15 +
+        dot(texture(colortex0, vec2(0.75, 0.75)).rgb, lumaWeights) * 0.15
+    );
+
     outColor = vec4(color, baseColor.a);
-    outBloom = vec4(bloomAccum, 1.0);
+    outBloom = vec4(bloomAccum, clamp(avgLuma, 0.02, 4.0));
 }
