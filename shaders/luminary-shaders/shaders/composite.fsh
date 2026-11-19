@@ -276,7 +276,37 @@ void main() {
 
     // 1. Screen-Space Reflections (SSR) per superfici dielettriche/metalliche lisce o bagnate (smoothness > 0.65)
     if (depth < 0.9999 && smoothness > 0.65) {
-        vec3 ssrColor = computeSSR(viewPos, N, smoothness, isMetal, vTexCoord, dither);
+        vec3 ssrColor = vec3(0.0);
+
+        // SSR Roughness Filtering:
+        // Se la superficie è speculare perfetta (smoothness >= 0.92, es. acqua calma, vetro), raymarch singolo nitido.
+        // Se la superficie è satinata (0.65 < smoothness < 0.92, es. metalli levigati, pietre umide),
+        // applica spatial jitter-blur a 3-tap guidato da roughness = 1.0 - smoothness.
+        if (smoothness < 0.92) {
+            float roughness = (1.0 - smoothness);
+            float blurRadius = roughness * 0.18;
+
+            // Vettore tangente e bitangente ortogonali alla normale N
+            vec3 upVec = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+            vec3 tangent = normalize(cross(upVec, N));
+            vec3 bitangent = cross(N, tangent);
+
+            // Tap 1: centrale con micro-offset ditherato
+            vec3 N1 = normalize(N + (tangent * (dither - 0.5) + bitangent * (dither - 0.5)) * (blurRadius * 0.6));
+            vec3 sample1 = computeSSR(viewPos, N1, smoothness, isMetal, vTexCoord, dither);
+
+            // Tap 2: offset positivo lungo la tangente
+            vec3 N2 = normalize(N + (tangent * 0.866 + bitangent * 0.5) * blurRadius);
+            vec3 sample2 = computeSSR(viewPos, N2, smoothness, isMetal, vTexCoord, fract(dither + 0.333));
+
+            // Tap 3: offset negativo lungo la bitangente
+            vec3 N3 = normalize(N + (-tangent * 0.866 - bitangent * 0.5) * blurRadius);
+            vec3 sample3 = computeSSR(viewPos, N3, smoothness, isMetal, vTexCoord, fract(dither + 0.666));
+
+            ssrColor = (sample1 * 0.50) + (sample2 * 0.25) + (sample3 * 0.25);
+        } else {
+            ssrColor = computeSSR(viewPos, N, smoothness, isMetal, vTexCoord, dither);
+        }
 
         // Fresnel fisico Schlick per pesare il riflesso
         vec3 V = normalize(-viewPos);
