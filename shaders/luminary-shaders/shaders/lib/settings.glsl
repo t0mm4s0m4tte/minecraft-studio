@@ -13,6 +13,10 @@
 #define VOLUMETRIC_LIGHT
 #define WATER_CAUSTICS
 #define FOLIAGE_WAVING
+#define AUTO_EXPOSURE
+// #define DOF_ENABLED
+// #define CHROMATIC_ABERRATION
+#define TONEMAP_PRESET 0 // [0 1 2]
 
 #define AO_QUALITY 1 // [0 1 2]
 #define POM_DEPTH 0.06 // [0.02 0.04 0.06 0.08]
