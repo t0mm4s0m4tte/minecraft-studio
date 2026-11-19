@@ -17,6 +17,13 @@ uniform float viewHeight;
 uniform float near;
 uniform float far;
 
+uniform mat4 gbufferProjectionInverse;
+uniform mat4 gbufferModelViewInverse;
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
+uniform vec3 cameraPosition;
+uniform vec3 previousCameraPosition;
+
 in vec2 vTexCoord;
 
 /* RENDERTARGETS: 0 */
@@ -82,6 +89,46 @@ void main() {
     sceneHdr.b = texture(colortex0, uv + caOffset).b;
 #else
     sceneHdr = texture(colortex0, uv).rgb;
+#endif
+
+    // 1b. Camera Velocity Motion Blur (ricostruzione analitica screen-space a 4 tap)
+#ifdef MOTION_BLUR
+    float rawDepth = texture(depthtex0, uv).r;
+    if (rawDepth < 0.9999 && rawDepth > 0.56) {
+        vec4 currClip = vec4(uv * 2.0 - 1.0, rawDepth * 2.0 - 1.0, 1.0);
+        vec4 currViewH = gbufferProjectionInverse * currClip;
+        vec3 currView = currViewH.xyz / max(currViewH.w, 0.00001);
+        vec3 worldPos = (gbufferModelViewInverse * vec4(currView, 1.0)).xyz + (cameraPosition - previousCameraPosition);
+        vec4 prevView = gbufferPreviousModelView * vec4(worldPos, 1.0);
+        vec4 prevClip = gbufferPreviousProjection * prevView;
+        vec2 prevUV = (prevClip.xy / max(prevClip.w, 0.00001)) * 0.5 + 0.5;
+        vec2 velocity = clamp((uv - prevUV) * 0.45, vec2(-0.025), vec2(0.025));
+        if (dot(velocity, velocity) > 0.000001) {
+            vec3 mbAccum = sceneHdr * 0.40;
+            mbAccum += texture(colortex0, clamp(uv - velocity * 0.33, 0.001, 0.999)).rgb * 0.25;
+            mbAccum += texture(colortex0, clamp(uv - velocity * 0.66, 0.001, 0.999)).rgb * 0.20;
+            mbAccum += texture(colortex0, clamp(uv - velocity * 1.00, 0.001, 0.999)).rgb * 0.15;
+            sceneHdr = mbAccum;
+        }
+    }
+#endif
+
+    // 1c. Luma-Edge Anti-Aliasing & Contrast Adaptive Sharpening (CAS)
+#ifdef AA_SHARPEN
+    vec3 nN = texture(colortex0, uv + vec2(0.0, px.y)).rgb;
+    vec3 nS = texture(colortex0, uv - vec2(0.0, px.y)).rgb;
+    vec3 nE = texture(colortex0, uv + vec2(px.x, 0.0)).rgb;
+    vec3 nW = texture(colortex0, uv - vec2(px.x, 0.0)).rgb;
+    vec3 lW = vec3(0.2126, 0.7152, 0.0722);
+    float lC = dot(sceneHdr, lW);
+    float lMin = min(lC, min(min(dot(nN, lW), dot(nS, lW)), min(dot(nE, lW), dot(nW, lW))));
+    float lMax = max(lC, max(max(dot(nN, lW), dot(nS, lW)), max(dot(nE, lW), dot(nW, lW))));
+    float lContrast = lMax - lMin;
+    vec3 neighborAvg = (nN + nS + nE + nW) * 0.25;
+    // Sui bordi ad alto contrasto (> 0.18) ammorbidisce l'aliasing; sui micro-dettagli applica CAS sharpening
+    float edgeBlend = smoothstep(0.18, 0.55, lContrast) * 0.35;
+    vec3 casSharpen = max(sceneHdr + (sceneHdr - neighborAvg) * 0.18, vec3(0.0));
+    sceneHdr = mix(casSharpen, mix(sceneHdr, neighborAvg, edgeBlend), smoothstep(0.15, 0.35, lContrast));
 #endif
 
     // 2. Cinematic Bokeh Depth of Field (anello esagonale a 6 tap)
