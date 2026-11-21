@@ -37,6 +37,9 @@ Desktop.ini
 dist/
 *.log
 
+# Local AI instructions (keep local only)
+CLAUDE.md
+
 # Scratch & Screen captures
 *.jpg
 scratch/
