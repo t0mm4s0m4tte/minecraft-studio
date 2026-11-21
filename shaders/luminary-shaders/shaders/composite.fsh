@@ -90,6 +90,21 @@ float henyeyGreenstein(float cosTheta, float g) {
     return (1.0 - g2) / (4.0 * 3.14159265 * pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
 }
 
+// Fallback cielo per riflessi SSR quando il raymarching non interseca o esce dai bordi
+vec3 computeSSRSkyFallback(vec3 viewDir, vec3 N, vec3 upDir, vec3 sunDir, float rain) {
+    vec3 R = reflect(viewDir, N);
+    float upDotR = clamp(dot(R, normalize(upDir)), -1.0, 1.0);
+    float elevation = clamp(upDotR * 0.5 + 0.5, 0.0, 1.0);
+
+    vec3 zenithColor = mix(vec3(0.08, 0.22, 0.55), vec3(0.02, 0.04, 0.10), clamp(1.0 - normalize(sunDir).y, 0.0, 1.0));
+    vec3 horizonColor = mix(vec3(0.45, 0.65, 0.85), vec3(0.70, 0.40, 0.20), clamp(1.0 - abs(normalize(sunDir).y) * 2.0, 0.0, 1.0));
+    vec3 skyBase = mix(horizonColor, zenithColor, pow(elevation, 1.4));
+
+    // Desaturazione e scurimento durante precipitazioni (cielo nuvoloso/tempesta)
+    vec3 rainySky = vec3(0.25, 0.28, 0.32) * (0.4 + 0.6 * elevation);
+    return mix(skyBase, rainySky, rain * 0.75);
+}
+
 // =============================================================================
 // SCREEN-SPACE REFLECTIONS (SSR)
 // =============================================================================
@@ -316,8 +331,14 @@ void main() {
         vec3 F0 = mix(vec3(0.04), baseColor.rgb, isMetal);
         vec3 F = F0 + (1.0 - F0) * pow(clamp(1.0 - NdotV, 0.0, 1.0), 5.0);
 
+        // Fallback cielo se SSR è debole o mancato ai bordi (outdoor o dipendente da sky exposure)
+        float ssrLen = length(ssrColor);
+        float missWeight = 0.35 * (1.0 - step(0.05, ssrLen));
+        vec3 skyFallback = computeSSRSkyFallback(-V, N, upPosition, sunPosition, effectiveRain);
+        ssrColor = mix(ssrColor, skyFallback, missWeight);
+
         float reflectionStrength = pow(smoothness, 2.0) * mix(0.75, 1.0, isMetal);
-        color = mix(color, color + ssrColor * F, reflectionStrength);
+        color = color * (1.0 - F * reflectionStrength * 0.55) + ssrColor * F * reflectionStrength;
     }
 
     // 2. Volumetric Light / Godrays & Underwater Caustic Shafts

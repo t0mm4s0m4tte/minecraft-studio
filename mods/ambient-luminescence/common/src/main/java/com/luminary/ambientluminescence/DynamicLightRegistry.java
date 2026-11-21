@@ -42,6 +42,24 @@ public final class DynamicLightRegistry {
         register("minecraft:exposed_copper_bulb", 12);
         register("minecraft:weathered_copper_bulb", 8);
         register("minecraft:oxidized_copper_bulb", 4);
+
+        // Additional MC 1.21.1 dynamic light sources
+        register("minecraft:beacon", 15);
+        register("minecraft:conduit", 15);
+        register("minecraft:end_rod", 14);
+        register("minecraft:jack_o_lantern", 15);
+        register("minecraft:campfire", 15);
+        register("minecraft:soul_campfire", 10);
+        register("minecraft:ochre_froglight", 15);
+        register("minecraft:verdant_froglight", 15);
+        register("minecraft:pearlescent_froglight", 15);
+        register("minecraft:respawn_anchor", 15);
+        register("minecraft:enchanting_table", 7);
+        register("minecraft:ender_chest", 7);
+        register("minecraft:blaze_rod", 10);
+        register("minecraft:blaze_powder", 6);
+        register("minecraft:magma_cream", 6);
+        register("minecraft:prismarine_crystals", 6);
     }
 
     private DynamicLightRegistry() {}

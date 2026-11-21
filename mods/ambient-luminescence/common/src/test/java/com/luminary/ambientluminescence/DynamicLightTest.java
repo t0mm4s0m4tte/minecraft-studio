@@ -3,6 +3,12 @@ package com.luminary.ambientluminescence;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DynamicLightTest {
@@ -17,6 +23,53 @@ public class DynamicLightTest {
         assertEquals(15, DynamicLightRegistry.getLuminance("minecraft:lantern"));
         assertEquals(15, DynamicLightRegistry.getLuminance("minecraft:copper_bulb"));
         assertEquals(0, DynamicLightRegistry.getLuminance("minecraft:stone"));
+
+        // New 1.21.1 dynamic light sources
+        assertEquals(15, DynamicLightRegistry.getLuminance("minecraft:ochre_froglight"));
+        assertEquals(14, DynamicLightRegistry.getLuminance("minecraft:end_rod"));
+        assertEquals(15, DynamicLightRegistry.getLuminance("minecraft:campfire"));
+        assertEquals(10, DynamicLightRegistry.getLuminance("minecraft:soul_campfire"));
+    }
+
+    @Test
+    public void testLuminescenceConfigSaveAndLoad(@TempDir Path tmp) throws IOException {
+        Path configPath = tmp.resolve("ambient_luminescence.json");
+
+        // 1. Initial load from non-existent file generates default and saves to path
+        LuminescenceConfig initial = LuminescenceConfig.loadFromPath(configPath);
+        assertNotNull(initial);
+        assertTrue(initial.enabled);
+        assertEquals(12, initial.maxRadius);
+        assertTrue(Files.exists(configPath));
+
+        // 2. Custom values and save
+        initial.maxRadius = 14;
+        initial.underwaterFlameExtinguish = false;
+        initial.lightDroppedItems = false;
+        LuminescenceConfig.saveToPath(configPath, initial);
+
+        LuminescenceConfig reloaded = LuminescenceConfig.loadFromPath(configPath);
+        assertEquals(14, reloaded.maxRadius);
+        assertFalse(reloaded.underwaterFlameExtinguish);
+        assertFalse(reloaded.lightDroppedItems);
+
+        // 3. Test maxRadius clamping (< 4 or > 14)
+        initial.maxRadius = 99;
+        LuminescenceConfig.saveToPath(configPath, initial);
+        LuminescenceConfig clampedHigh = LuminescenceConfig.loadFromPath(configPath);
+        assertEquals(14, clampedHigh.maxRadius);
+
+        initial.maxRadius = 1;
+        LuminescenceConfig.saveToPath(configPath, initial);
+        LuminescenceConfig clampedLow = LuminescenceConfig.loadFromPath(configPath);
+        assertEquals(4, clampedLow.maxRadius);
+
+        // 4. Fallback on corrupted file
+        Files.writeString(configPath, "{ this is invalid json ]]]");
+        LuminescenceConfig fallback = LuminescenceConfig.loadFromPath(configPath);
+        assertNotNull(fallback);
+        assertTrue(fallback.enabled);
+        assertEquals(12, fallback.maxRadius);
     }
 
     @Test

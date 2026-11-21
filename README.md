@@ -13,19 +13,31 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 
 | Icon | Module | Path | Role | Technical Target |
 |---|---|---|---|---|
-| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Multi-loader client mod (Fabric + NeoForge) for dynamic lighting on players, dropped items, and Trial Chambers 1.21 blocks | Java 21, zero per-frame allocations |
-| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | 32x32 RGBA resource pack with normals, AO, height (`_n`), smoothness, F0/metalness, porosity and emissives (`_s`) across 1,015 blocks and 605 items (4,860 PNGs) with 17 anti-tiling variants | 100% MC 1.21.1 coverage (`--strict --all` 1620/1620 PASS) |
-| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Iris GLSL shader pack (`#version 330 compatibility`) with GGX PBR, Beer-Lambert water waves, 3D POM, SSR, volumetric godrays, and dedicated weather stage | Target budget `<= 3.8 ms` GPU on `Balanced` |
+| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Multi-loader client mod (Fabric + NeoForge) for dynamic lighting on players, dropped items, and Trial Chambers 1.21 blocks | Java 21, zero per-frame allocations, async JSON config |
+| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | 32x32 RGBA resource pack with normals, AO, height (`_n`), smoothness, F0/metalness, porosity and emissives (`_s`) across 1,015 blocks and 605 items (4,860 PNGs) with 29 anti-tiling variants | 100% MC 1.21.1 coverage (`--strict --all` 1620/1620 PASS) |
+| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Iris GLSL shader pack (`#version 330 compatibility`) with GGX PBR, Beer-Lambert water waves, 3D POM, energy-preserving SSR, 5-tap Tent bloom, volumetric godrays, and dedicated weather stage | Target budget `<= 3.8 ms` GPU on `Balanced` |
 
 ---
 
-## Shader Profiles (v1.7.0)
+## Visual QA & Seamless Anti-Tiling
+
+Check out the automated visual QA contact sheets verifying seamless 3x3 mosaics and LabPBR lighting response:
+
+| Seamless 3x3 Anti-Tiling Mosaic | Synthetic LabPBR Lit Preview (Normals + Specular) |
+|:---:|:---:|
+| ![Seamless 3x3](docs/branding/contact_sheet_3x3.png) | ![Lit Preview](docs/branding/contact_sheet_lit.png) |
+
+Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE.md](docs/MODRINTH_PAGE.md).
+
+---
+
+## Shader Profiles (v1.8.0)
 
 | Profile | Shadows & GGX Specular | LabPBR 1.3, SSS & Wetness | SSR & Volumetric Godrays | Atmosphere, AA & Optics | POM & AO |
 |---|---|---|---|---|---|
 | **Potato** | Disabled | Disabled | Off (`0`) | Minimal / Static (No AA/Clouds) | Off (`0`) |
-| **Balanced** *(Default)* | Enabled | Enabled (SSS + Puddles/Ripples + Hand/Entity PBR) | `12-step` SSR + `8-step` Godrays/Shafts | FBM Clouds + Water Fog + Auto-Exposure + Luma-Edge AA/CAS | `10-step` POM + Micro-AO (`1`) |
-| **Cinematic** | Enabled | Enabled (SSS + Puddles/Ripples + Hand/Entity PBR) | `24-step` SSR + `16-step` Godrays/Shafts | FBM Clouds + Water Fog + Bokeh DoF + CA + Edge-AA + Motion Blur | `16-step` POM + Screen Cavity (`2`) |
+| **Balanced** *(Default)* | Enabled | Enabled (SSS + Puddles/Ripples + Hand/Entity PBR) | `12-step` Energy SSR + `8-step` Godrays/Shafts | FBM Clouds + Water Fog + 5-Tap Tent Bloom + Auto-Exposure + Luma-Edge AA/CAS | `10-step` POM + Micro-AO (`1`) |
+| **Cinematic** | Enabled | Enabled (SSS + Puddles/Ripples + Hand/Entity PBR) | `24-step` Energy SSR + Sky Fallback + `16-step` Godrays/Shafts | FBM Clouds + Water Fog + 5-Tap Tent Bloom + Bokeh DoF + CA + Edge-AA + Motion Blur | `16-step` POM + Screen Cavity (`2`) |
 
 ---
 
@@ -36,9 +48,9 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 - **Required Mods**: Fabric Loader `>= 0.16.5` + Fabric API (or NeoForge `21.1.65+`) with **Sodium** and **Iris**
 
 After generating packages in `dist/` with `scripts/package_release.py`:
-1. Copy `ambient_luminescence-fabric-1.7.0.jar` (or `neoforge`) into `.minecraft/mods/`.
-2. Copy `Aetheria-LabPBR-32x-1.7.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
-3. Copy `Luminary-Shaders-1.7.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
+1. Copy `ambient_luminescence-fabric-1.8.0.jar` (or `neoforge`) into `.minecraft/mods/`.
+2. Copy `Aetheria-LabPBR-32x-1.8.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
+3. Copy `Luminary-Shaders-1.8.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
 
 ---
 

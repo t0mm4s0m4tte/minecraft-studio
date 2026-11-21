@@ -157,8 +157,13 @@ void main() {
 #endif
 
     // 3. Bloom highlights
-    vec4 bloomSample = texture(colortex3, uv);
-    vec3 bloomHdr = bloomSample.rgb;
+    vec2 bOff = px * 2.5;
+    vec3 bloomHdr = texture(colortex3, uv).rgb * 0.40 + (
+        texture(colortex3, clamp(uv + vec2(bOff.x, bOff.y), 0.001, 0.999)).rgb +
+        texture(colortex3, clamp(uv + vec2(-bOff.x, bOff.y), 0.001, 0.999)).rgb +
+        texture(colortex3, clamp(uv + vec2(bOff.x, -bOff.y), 0.001, 0.999)).rgb +
+        texture(colortex3, clamp(uv + vec2(-bOff.x, -bOff.y), 0.001, 0.999)).rgb
+    ) * 0.15;
     vec3 hdrColor = sceneHdr + bloomHdr * 0.25;
 
     // 4. Dynamic Auto-Exposure & Eye Adaptation

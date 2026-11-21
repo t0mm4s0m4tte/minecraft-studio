@@ -132,7 +132,7 @@ public final class DynamicLightTracker {
             }
 
             // Radial Euclidean falloff across nearby blocks
-            int radius = Math.min(clampedLum - 1, 12);
+            int radius = Math.min(clampedLum - 1, Math.max(4, Math.min(LuminescenceConfig.get().maxRadius, 14)));
             for (int dx = -radius; dx <= radius; dx++) {
                 int maxDy = radius - Math.abs(dx);
                 for (int dy = -maxDy; dy <= maxDy; dy++) {

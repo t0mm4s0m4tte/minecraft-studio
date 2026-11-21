@@ -3,7 +3,16 @@
 All notable changes to the Minecraft Studio suite are documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
-## [1.7.0] - 2026-11-21
+## [1.8.0] - 2026-11-21
+### Added
+- **Asynchronous JSON Client Configuration (`LuminescenceConfig.java`)**: Pure Java non-blocking configuration loader reading `config/ambient_luminescence.json` via `Util.ioPool()`. Configurable max radius (clamped `4..14`), toggles for entity lighting, dropped items, and fire entity lighting with resilient JSON fallback on parse errors.
+- **Expanded MC 1.21.1 Dynamic Light Sources**: Added missing registry entries in `DynamicLightRegistry` for `beacon`, `conduit`, `end_rod`, `jack_o_lantern`, `campfire`, `soul_campfire`, `ochre_froglight`, `verdant_froglight`, `pearlescent_froglight`, `respawn_anchor`, `enchanting_table`, `ender_chest`, `blaze_rod`, `blaze_powder`, `magma_cream`, `prismarine_crystals`, plus dynamic entity lighting for `Allay` (8), `EndCrystal` (12), and fireballs (12).
+- **Automated Visual QA Contact Sheet Generator (`generate_contact_sheets.py`)**: Generates 3x3 albedo seamless tiling preview (`contact_sheet_3x3.png`) and synthetic LabPBR lit preview (`contact_sheet_lit.png`) for visual validation.
+- **12 New Anti-Tiling Blockstates**: Added weighted multi-rotation definitions (`0°/90°/180°/270°`) for `stone_bricks`, `cracked_stone_bricks`, `mossy_stone_bricks`, `mossy_cobblestone`, `deepslate_bricks`, `deepslate_tiles`, `moss_block`, `mud`, `clay`, `soul_sand`, `soul_soil`, and `blackstone` (total anti-tiling blockstates expanded to 29).
+- **Energy-Preserving SSR with Sky Fallback (`composite.fsh`)**: Added `computeSSRSkyFallback` blending horizon and zenith lighting on missed/edge SSR rays, and enforced energy-conserving composition `color = color * (1.0 - F * reflectionStrength * 0.55) + ssrColor * F * reflectionStrength;`.
+- **5-Tap Tent Bloom Filter (`final.fsh`)**: Replaced single-tap bloom sampling with a 5-tap cross Tent filter on `colortex3` for smoother highlight rolloff without edge halos.
+- **GLSL Static QA Suite (`tests/test_shaders_static.py`)**: Unit tests enforcing `#version 330 compatibility`, `/* RENDERTARGETS: ... */` annotations, `srgbToLinear` in `gbuffers_*.fsh`, and no duplicate block mappings in `block.properties`.
+- **Modrinth & Marketplace Documentation (`docs/MODRINTH_PAGE.md`)**: Complete release sheet ready for public publishing on Modrinth and CurseForge.
 ### Added
 - **Zero-Allocation Double-Buffering Engine (`DynamicLightTracker.java`)**: Pre-allocated dual map buffers (`MAP_A`, `MAP_B`) and dual dirty set buffers (`DIRTY_A`, `DIRTY_B`), eliminating all per-tick heap allocations during dynamic light propagation and dirty chunk discovery.
 - **Full-Pack Strict Validator Mode (`validate_labpbr.py --all`)**: Automated validation over all 1,620 texture sets (1,015 blocks and 605 items = 4,860 PNGs) with custom handling for vanilla 64x flowing fluid textures (`lava_flow`, `water_flow`).

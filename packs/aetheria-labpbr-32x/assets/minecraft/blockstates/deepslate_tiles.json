@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/deepslate_tiles",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate_tiles",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate_tiles",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate_tiles",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}

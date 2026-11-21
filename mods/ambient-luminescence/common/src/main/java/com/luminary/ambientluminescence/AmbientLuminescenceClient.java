@@ -8,6 +8,10 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Blaze;
@@ -36,6 +40,13 @@ public final class AmbientLuminescenceClient {
     public static void onClientTick(Minecraft client) {
         if (client == null) return;
 
+        LuminescenceConfig.initAsync(client.gameDirectory.toPath().resolve("config"));
+        LuminescenceConfig cfg = LuminescenceConfig.get();
+        if (!cfg.enabled) {
+            DynamicLightTracker.clear();
+            return;
+        }
+
         Player player = client.player;
         ClientLevel level = client.level;
         if (player == null || level == null) {
@@ -45,10 +56,10 @@ public final class AmbientLuminescenceClient {
 
         // 1. Process local player main-hand and off-hand light (with underwater flame rule)
         boolean playerUnderwater = player.isUnderWater();
-        int mainHandLum = getStackLuminance(player.getMainHandItem(), playerUnderwater);
-        int offHandLum = getStackLuminance(player.getOffhandItem(), playerUnderwater);
+        int mainHandLum = getStackLuminance(player.getMainHandItem(), playerUnderwater && cfg.underwaterFlameExtinguish);
+        int offHandLum = getStackLuminance(player.getOffhandItem(), playerUnderwater && cfg.underwaterFlameExtinguish);
         int playerLum = Math.max(mainHandLum, offHandLum);
-        if (player.isOnFire()) {
+        if (cfg.lightFireEntities && player.isOnFire()) {
             playerLum = Math.max(playerLum, 15);
         }
 
@@ -72,20 +83,32 @@ public final class AmbientLuminescenceClient {
             boolean underwater = entity.isInWater();
 
             if (entity instanceof ItemEntity itemEntity) {
-                entityLum = getStackLuminance(itemEntity.getItem(), underwater);
+                if (cfg.lightDroppedItems) {
+                    entityLum = getStackLuminance(itemEntity.getItem(), underwater && cfg.underwaterFlameExtinguish);
+                }
             } else if (entity instanceof Player otherPlayer) {
-                int mLum = getStackLuminance(otherPlayer.getMainHandItem(), otherPlayer.isUnderWater());
-                int oLum = getStackLuminance(otherPlayer.getOffhandItem(), otherPlayer.isUnderWater());
-                entityLum = Math.max(mLum, oLum);
-            } else if (entity instanceof Blaze || entity instanceof MagmaCube) {
-                entityLum = 12;
-            } else if (entity instanceof GlowSquid) {
-                entityLum = 10;
-            } else if (entity instanceof SpectralArrow) {
-                entityLum = 10;
+                if (cfg.lightEntities) {
+                    int mLum = getStackLuminance(otherPlayer.getMainHandItem(), otherPlayer.isUnderWater() && cfg.underwaterFlameExtinguish);
+                    int oLum = getStackLuminance(otherPlayer.getOffhandItem(), otherPlayer.isUnderWater() && cfg.underwaterFlameExtinguish);
+                    entityLum = Math.max(mLum, oLum);
+                }
+            } else if (cfg.lightEntities) {
+                if (entity instanceof Blaze || entity instanceof MagmaCube) {
+                    entityLum = 12;
+                } else if (entity instanceof GlowSquid) {
+                    entityLum = 10;
+                } else if (entity instanceof SpectralArrow) {
+                    entityLum = 10;
+                } else if (entity instanceof Allay) {
+                    entityLum = 8;
+                } else if (entity instanceof EndCrystal) {
+                    entityLum = 12;
+                } else if (entity instanceof SmallFireball || entity instanceof LargeFireball) {
+                    entityLum = 12;
+                }
             }
 
-            if (entity.isOnFire() && !underwater) {
+            if (cfg.lightFireEntities && entity.isOnFire() && !underwater) {
                 entityLum = Math.max(entityLum, 15);
             }
 

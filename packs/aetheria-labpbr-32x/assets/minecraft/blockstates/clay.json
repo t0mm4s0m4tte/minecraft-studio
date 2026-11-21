@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/clay",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/clay",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/clay",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/clay",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}
