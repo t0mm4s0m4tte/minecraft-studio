@@ -119,5 +119,24 @@ class TestShadersStatic(unittest.TestCase):
                 f"{f.name} contains unbounded while(true) loop"
             )
 
+    def test_multiscatter_ggx_and_shadow_world_sync(self):
+        # 1. Multi-Scatter GGX energy compensation check
+        target_fsh = ["gbuffers_terrain.fsh", "gbuffers_hand.fsh", "gbuffers_entities.fsh"]
+        for name in target_fsh:
+            f = self.shaders_dir / name
+            self.assertTrue(f.is_file(), f"{name} not found")
+            content = f.read_text(encoding="utf-8")
+            self.assertIn("energyComp", content, f"{name} does not contain 'energyComp' for Multi-Scatter GGX")
+
+        # 2. World-space foliage shadow waving check
+        shadow_vsh = self.shaders_dir / "shadow.vsh"
+        self.assertTrue(shadow_vsh.is_file(), "shadow.vsh not found")
+        content_shadow = shadow_vsh.read_text(encoding="utf-8")
+        self.assertIn(
+            "shadowModelViewInverse * shadowViewPos",
+            content_shadow,
+            "shadow.vsh does not transform shadowViewPos with shadowModelViewInverse for foliage waving sync"
+        )
+
 if __name__ == "__main__":
     unittest.main()

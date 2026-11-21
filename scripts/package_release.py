@@ -55,7 +55,7 @@ def _run_step(cmd, cwd: Path, env=None):
 def build_release(
     root_dir: Path,
     output_dir: Path,
-    version: str = "1.9.0",
+    version: str = "2.0.0",
     skip_gradle: bool = False,
     skip_validate: bool = False,
 ) -> dict:
@@ -63,6 +63,10 @@ def build_release(
     root = Path(root_dir).resolve()
     out = Path(output_dir).resolve()
     out.mkdir(parents=True, exist_ok=True)
+
+    for old_file in out.glob("*"):
+        if old_file.is_file() and old_file.suffix in (".zip", ".jar") and f"-{version}." not in old_file.name:
+            old_file.unlink()
 
     pack_dir = root / "packs" / "aetheria-labpbr-32x"
     shader_dir = root / "shaders" / "luminary-shaders"
@@ -111,7 +115,7 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description="Genera archivi release per minecraft-studio")
     parser.add_argument("--output-dir", default=str(repo_root / "dist"), help="Cartella output artefatti")
-    parser.add_argument("--version", default="1.9.0", help="Versione pacchetti release")
+    parser.add_argument("--version", default="2.0.0", help="Versione pacchetti release")
     parser.add_argument("--skip-gradle", action="store_true", help="Salta la build Gradle e usa eventuali JAR gia presenti")
     parser.add_argument("--skip-validate", action="store_true", help="Salta validate_labpbr.py --strict")
     args = parser.parse_args()

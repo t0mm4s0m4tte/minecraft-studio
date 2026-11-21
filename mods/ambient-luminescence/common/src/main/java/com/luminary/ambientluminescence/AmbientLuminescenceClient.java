@@ -96,9 +96,11 @@ public final class AmbientLuminescenceClient {
                 }
             } else if (entity instanceof Player otherPlayer) {
                 if (cfg.lightEntities) {
-                    int mLum = getStackLuminance(otherPlayer.getMainHandItem(), otherPlayer.isUnderWater() && cfg.underwaterFlameExtinguish);
-                    int oLum = getStackLuminance(otherPlayer.getOffhandItem(), otherPlayer.isUnderWater() && cfg.underwaterFlameExtinguish);
-                    entityLum = Math.max(mLum, oLum);
+                    boolean otherUnder = otherPlayer.isUnderWater() && cfg.underwaterFlameExtinguish;
+                    int mLum = getStackLuminance(otherPlayer.getMainHandItem(), otherUnder);
+                    int oLum = getStackLuminance(otherPlayer.getOffhandItem(), otherUnder);
+                    int hLum = getStackLuminance(otherPlayer.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD), otherUnder);
+                    entityLum = Math.max(Math.max(mLum, oLum), hLum);
                 }
             } else if (cfg.lightEntities) {
                 if (entity instanceof Blaze || entity instanceof MagmaCube) {
@@ -115,9 +117,13 @@ public final class AmbientLuminescenceClient {
                     entityLum = 12;
                 }
                 if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                    boolean mobUnder = underwater && cfg.underwaterFlameExtinguish;
                     int heldLum = Math.max(
-                        getStackLuminance(living.getMainHandItem(), underwater && cfg.underwaterFlameExtinguish),
-                        getStackLuminance(living.getOffhandItem(), underwater && cfg.underwaterFlameExtinguish)
+                        Math.max(
+                            getStackLuminance(living.getMainHandItem(), mobUnder),
+                            getStackLuminance(living.getOffhandItem(), mobUnder)
+                        ),
+                        getStackLuminance(living.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD), mobUnder)
                     );
                     entityLum = Math.max(entityLum, heldLum);
                 }

@@ -460,7 +460,8 @@ void main() {
     if (smoothness > 0.02 && NdotL > 0.0) {
         float NDF = D_GGX(NdotH, roughness);
         float G = G_Smith(NdotV, NdotL, roughness);
-        vec3 numerator = NDF * G * F;
+        vec3 energyComp = vec3(1.0) + F0 * (roughness * 0.65);
+        vec3 numerator = NDF * G * F * energyComp;
         float denominator = 4.0 * NdotV * NdotL + 0.0001;
         specularColor += (numerator / denominator) * NdotL * skyOnlyLight * shadowColor * 2.1;
     }

@@ -18,7 +18,7 @@ High-performance graphics and modding studio for Minecraft built on the Iris + S
 ## Operational Commands
 ```bash
 # Validate LabPBR Assets (Strict full 1,620 asset sets --strict --all)
-python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict
+python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict --all
 
 # Compile Mod (Fabric + NeoForge)
 cd mods/ambient-luminescence

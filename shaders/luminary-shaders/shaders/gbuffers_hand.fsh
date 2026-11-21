@@ -156,7 +156,8 @@ void main() {
         float NDF = D_GGX(NdotH, roughness);
         float G = G_Smith(NdotV, NdotL, roughness);
         vec3 F = F_Schlick(VdotH, F0);
-        vec3 specContrib = (NDF * G * F) / (4.0 * NdotV * NdotL + 0.0001);
+        vec3 energyComp = vec3(1.0) + F0 * (roughness * 0.65);
+        vec3 specContrib = (NDF * G * F * energyComp) / max(4.0 * NdotV * NdotL, 0.001);
         specularColor = specContrib * NdotL * light * 1.85;
     }
 

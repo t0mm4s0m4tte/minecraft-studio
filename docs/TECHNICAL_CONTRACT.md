@@ -1,8 +1,8 @@
 # TECHNICAL ARCHITECTURE CONTRACT (TAC) — MINECRAFT STUDIO SUITE
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
-**Spec Version**: 1.9.0-RELEASE  
+**Spec Version**: 2.0.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
-**Authors**: `mc-pipeline-architect` in collaboration with `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
+**Maintainers**: Minecraft Studio Core Engineering
 
 ---
 
@@ -76,9 +76,10 @@ Mapping in `shaders/block.properties`:
 
 ---
 
-## 4. Stage-by-Stage Acceptance Criteria
-1. **Stage 2 (Mod)**: `./gradlew build test` (JDK 21) passes on Fabric and NeoForge, zero client class references in common, active Mixin hooks on `LevelRenderer`/Sodium, zero dead code.
-2. **Stage 3 (Pack)**: Zero untracked subdirectories in `assets/`, valid `texture.properties`, compliant LabPBR 1.3 channels, `validate_labpbr.py --strict` 100% PASS, Python unit tests green.
-3. **Stage 4 (Shaders v1.1.0)**: Deferred pipeline (`deferred.fsh`), sRGB linearization, accurate LabPBR specular tables, Rain Wetness & Dynamic Puddles driven by porosity `_s.b` (`0..64`), analytical world-space water with Beer-Lambert, underwater caustics & Snell refraction, View-Space SSR with binary refinement & edge fade, Volumetric Godrays with Bayer 4x4 dither, world-space Starfield & `moonPhase`, dedicated `gbuffers_weather` stage with camera near-fade, bloom mipmap + Khronos PBR Neutral tone mapping.
-4. **Stage 5 (QA Gate)**: All 6 axes `>= 8/10`, binary `PASS` verdict.
+## 4. Module Acceptance & Release Gate Criteria
+1. **Multi-Loader Mod (`ambient-luminescence`)**: `./gradlew build test` (JDK 21) passes across `:common`, `:fabric`, and `:neoforge`, zero loader-specific or client-only leaks in common logic, active Mixin hooks on `LevelRenderer` and Sodium `LightDataAccess`, asynchronous config hot-reload, and zero per-frame heap allocations.
+2. **LabPBR 1.3 Resource Pack (`aetheria-labpbr-32x`)**: Valid `texture.properties` (`format=lab-pbr`), strict compliance across all 1,620 texture sets (4,860 RGBA PNGs) and 54 anti-tiling blockstate JSONs verified via `validate_labpbr.py --strict --all`, plus automated 3x3 and lit contact sheets.
+3. **Deferred Iris Shader Pack (`luminary-shaders` v2.0.0)**: `#version 330 compatibility` pipeline (`shadow` -> `gbuffers_*` -> `deferred` -> `composite` -> `final`), sRGB-to-Linear conversion, LabPBR 1.3 + IPBR fallback, Multi-Scatter GGX energy compensation, world-space foliage shadow synchronization, cotangent 3D normal mapping on hand/entities, rain wetness & splash ripples, world-space Beer-Lambert water with linear depth `-vViewPos.z`, smooth energy-conserving SSR, volumetric clouds & godrays, 5-tap Tent bloom, and AgX / Khronos PBR Neutral tone mapping.
+4. **Automated Static & Packaging Gate**: 100% pass rate on `python -m unittest discover -s tests -v` (`test_shaders_static`, `test_contact_sheets`, `test_package_release`) and deterministic archive generation in `dist/`.
+
 

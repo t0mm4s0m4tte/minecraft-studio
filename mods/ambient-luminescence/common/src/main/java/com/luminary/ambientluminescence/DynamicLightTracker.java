@@ -20,7 +20,7 @@ public final class DynamicLightTracker {
     private static final Long2IntOpenHashMap PREV_SOURCES = new Long2IntOpenHashMap();
     private static final Long2IntOpenHashMap CURR_SOURCES = new Long2IntOpenHashMap();
 
-    private static final int[][][] DIST_COST = new int[15][15][15];
+    private static final double[][][] DIST_LEN = new double[15][15][15];
 
     private static Long2IntOpenHashMap activeWorkingMap;
     private static LongOpenHashSet activeDirtySet;
@@ -35,8 +35,7 @@ public final class DynamicLightTracker {
         for (int x = 0; x <= 14; x++) {
             for (int y = 0; y <= 14; y++) {
                 for (int z = 0; z <= 14; z++) {
-                    double dist = Math.sqrt(x * x + y * y + z * z);
-                    DIST_COST[x][y][z] = (int) Math.round(dist);
+                    DIST_LEN[x][y][z] = Math.sqrt(x * x + y * y + z * z);
                 }
             }
         }
@@ -122,6 +121,7 @@ public final class DynamicLightTracker {
             }
 
             int radius = Math.min(clampedLum - 1, Math.max(4, Math.min(LuminescenceConfig.get().maxRadius, 14)));
+            double stepCost = Math.max(0.85, (double) clampedLum / (radius + 0.8));
             for (int dx = -radius; dx <= radius; dx++) {
                 int ax = Math.abs(dx);
                 int maxDy = radius - ax;
@@ -130,7 +130,7 @@ public final class DynamicLightTracker {
                     int maxDz = maxDy - ay;
                     for (int dz = -maxDz; dz <= maxDz; dz++) {
                         if (dx == 0 && dy == 0 && dz == 0) continue;
-                        int falloffLum = clampedLum - DIST_COST[ax][ay][Math.abs(dz)];
+                        int falloffLum = clampedLum - (int) Math.round(DIST_LEN[ax][ay][Math.abs(dz)] * stepCost);
                         if (falloffLum > 0) {
                             long p = packPos(blockX + dx, blockY + dy, blockZ + dz);
                             int cur = activeWorkingMap.get(p);
