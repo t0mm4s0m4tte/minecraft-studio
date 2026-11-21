@@ -3,6 +3,15 @@
 All notable changes to the Minecraft Studio suite are documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [1.7.0] - 2026-11-21
+### Added
+- **Zero-Allocation Double-Buffering Engine (`DynamicLightTracker.java`)**: Pre-allocated dual map buffers (`MAP_A`, `MAP_B`) and dual dirty set buffers (`DIRTY_A`, `DIRTY_B`), eliminating all per-tick heap allocations during dynamic light propagation and dirty chunk discovery.
+- **Full-Pack Strict Validator Mode (`validate_labpbr.py --all`)**: Automated validation over all 1,620 texture sets (1,015 blocks and 605 items = 4,860 PNGs) with custom handling for vanilla 64x flowing fluid textures (`lava_flow`, `water_flow`).
+- **Extended Anti-Tiling Blockstates**: Added 10 multi-variant weighted rotation blockstates (`deepslate`, `cobbled_deepslate`, `dirt`, `sand`, `netherrack`, `end_stone`, `granite`, `diorite`, `andesite`, `bricks`) bringing the total to 17.
+- **Integrated PBR (IPBR) Shader Fallback (`gbuffers_terrain.vsh`, `gbuffers_terrain.fsh`)**: Real-time pass-through of `vBlockId` via `mc_Entity.x` to assign physically-based fallback metallic and emissive properties when specular maps are unassigned.
+- **Dynamic Shadow Texel Resolution**: `texelSize` in `gbuffers_terrain.fsh` Poisson filter is now dynamically scaled from Iris `shadowMapResolution`.
+- **Packaging & CI Alignment**: Mod version bumped to `1.7.0`, GitHub Actions CI updated to execute `--strict --all` validation, and release packager default set to `1.7.0`.
+
 ## [1.6.0] - 2026-11-19
 ### Added
 - **Volumetric Weather Particle Lighting & Dynamic Torch Scatter (`gbuffers_weather.fsh`)**: Physical forward-scattering Mie on rain and snow particles driven by sun/moon vector (`shadowLightPosition`), combined with quadratic handheld dynamic torchlight falloff (`heldBlockLightValue`, `heldBlockLightValue2`).

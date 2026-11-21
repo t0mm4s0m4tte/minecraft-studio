@@ -28,6 +28,7 @@ out vec3 vWorldNormal;
 out vec3 vWorldPos;
 out vec4 vShadowPos;
 flat out vec4 vAtlasBounds;
+flat out int vBlockId;
 
 void main() {
     vColor = gl_Color;
@@ -59,6 +60,7 @@ void main() {
 #ifdef FOLIAGE_WAVING
     // Micro-waving per foglie, erba e vegetazione organica (ID 10018 o blocco 5)
     int blockId = int(mc_Entity.x + 0.5);
+    vBlockId = blockId;
     if (blockId == 10018 || blockId == 5) {
         vec3 worldApprox = (gbufferModelViewInverse * viewPos).xyz;
         float waveSpeed = frameTimeCounter * 2.2;

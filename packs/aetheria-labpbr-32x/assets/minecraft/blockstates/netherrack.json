@@ -1,0 +1,26 @@
+﻿{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/netherrack",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/netherrack",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/netherrack",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/netherrack",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}

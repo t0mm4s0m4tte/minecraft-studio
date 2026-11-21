@@ -8,7 +8,9 @@
     "Luminary Studios"
   ],
   "contact": {
-    "homepage": "https://github.com/luminary/ambient-luminescence"
+    "homepage": "https://github.com/t0mm4s0m4tte/minecraft-studio",
+    "sources": "https://github.com/t0mm4s0m4tte/minecraft-studio",
+    "sponsor": "https://github.com/sponsors/t0mm4s0m4tte"
   },
   "license": "MIT",
   "icon": "assets/ambient_luminescence/icon.png",

@@ -42,6 +42,7 @@ in vec3 vWorldNormal;
 in vec3 vWorldPos;
 in vec4 vShadowPos;
 flat in vec4 vAtlasBounds;
+flat in int vBlockId;
 
 /* RENDERTARGETS: 0,1,2 */
 layout(location = 0) out vec4 outColor;   // Linear RGB HDR + Alpha
@@ -166,7 +167,7 @@ vec3 sampleColoredShadowMap(vec4 shadowPos, float NdotL) {
     float bias = max(0.00075 * (1.0 - NdotL), 0.00025) * (distortFactor * 1.4 + 0.4);
     float currentDepth = sp.z - bias;
 
-    vec2 texelSize = vec2(1.0 / 2048.0);
+    vec2 texelSize = vec2(1.0 / float(max(shadowMapResolution, 512)));
     const vec2 poissonDisk[9] = vec2[9](
         vec2( 0.0,   0.0),
         vec2(-0.75, -0.45),
@@ -316,6 +317,27 @@ void main() {
     float rawEmissive = specSample.a * 255.0;
     if (rawEmissive >= 1.0 && rawEmissive <= 254.0) {
         emissive = rawEmissive / 254.0;
+    }
+
+    // Fallback Integrated PBR (IPBR) via block.properties se specular non definita/neutra
+    if (specSample.r < 0.01 && specSample.g < 0.01 && specSample.a < 0.01) {
+        if (vBlockId == 1) {
+            emissive = max(emissive, 0.75);
+        } else if (vBlockId == 2) {
+            isMetal = 1.0;
+            F0 = vec3(0.56, 0.57, 0.58);
+            smoothness = 0.55;
+        } else if (vBlockId == 3) {
+            isMetal = 1.0;
+            F0 = vec3(1.00, 0.71, 0.29);
+            smoothness = 0.65;
+        } else if (vBlockId == 4) {
+            isMetal = 1.0;
+            F0 = vec3(0.95, 0.64, 0.54);
+            smoothness = 0.50;
+        } else if (vBlockId == 10018 || vBlockId == 5) {
+            sss = max(sss, 0.65);
+        }
     }
 #endif
 

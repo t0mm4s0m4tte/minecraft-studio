@@ -1,0 +1,26 @@
+﻿{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/deepslate",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/deepslate",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}

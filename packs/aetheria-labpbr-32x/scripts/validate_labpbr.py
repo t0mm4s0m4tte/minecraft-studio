@@ -1,11 +1,11 @@
 """
 Script di validazione per texture LabPBR 1.3 - Aetheria LabPBR 32x.
 Verifica:
-1. Dimensioni: esattamente 32x32 pixel (o multiplo di animazione 32x32N)
+1. Dimensioni: esattamente 32x32 pixel (o multiplo di animazione 32x32N, eccezione 64x per fluidi a scorrimento 32x vanilla)
 2. Normal map (_n.png): RGBA (R=NormalX, G=NormalY, B=AO, A=Height)
 3. Specular map (_s.png): RGBA (R=Smoothness, G=Metalness/F0, B=Porosity/SSS, A=Emissive <= 254)
 4. Assenza di canali non conformi o deviazioni LabPBR 1.3
-5. Supporto flag --strict (exit code 1 se errori) e --subset <lista_o_file>
+5. Supporto flag --strict, --subset e --all
 """
 
 import os
@@ -128,6 +128,9 @@ def validate_texture_set(block_name, textures_dir, strict_labpbr=False):
     normal_file = os.path.join(textures_dir, f"{block_name}_n.png")
     spec_file = os.path.join(textures_dir, f"{block_name}_s.png")
     
+    expected_width = 64 if block_name in ("lava_flow", "water_flow") else 32
+    unit_height = 32
+
     for fpath, map_type in [(base_file, "Albedo"), (normal_file, "Normal (_n)"), (spec_file, "Specular (_s)")]:
         if not os.path.exists(fpath):
             errors.append(f"Manca file {map_type}: {os.path.basename(fpath)}")
@@ -138,11 +141,11 @@ def validate_texture_set(block_name, textures_dir, strict_labpbr=False):
             errors.append(f"Errore lettura {fpath}: {err}")
             continue
             
-        if meta["width"] != 32:
-            errors.append(f"Larghezza non conforme per {os.path.basename(fpath)}: {meta['width']}px (atteso 32px)")
+        if meta["width"] != expected_width:
+            errors.append(f"Larghezza non conforme per {os.path.basename(fpath)}: {meta['width']}px (atteso {expected_width}px)")
             
-        if meta["height"] % 32 != 0:
-            errors.append(f"Altezza non conforme per {os.path.basename(fpath)}: {meta['height']}px (atteso multiplo di 32px)")
+        if meta["height"] % unit_height != 0:
+            errors.append(f"Altezza non conforme per {os.path.basename(fpath)}: {meta['height']}px (atteso multiplo di {unit_height}px)")
             
         if not meta["is_rgba"]:
             errors.append(f"{os.path.basename(fpath)} deve essere salvato in formato RGBA a 8-bit (trovato color_type={meta['color_type']})")
@@ -160,22 +163,73 @@ def validate_texture_set(block_name, textures_dir, strict_labpbr=False):
 
     return errors, warnings
 
+def check_texture_properties(root_dir):
+    """Verifica presenza e contenuto di format=lab-pbr nei percorsi ufficiali."""
+    errors = []
+    candidates = [
+        os.path.join(root_dir, "assets", "minecraft", "textures", "texture.properties"),
+        os.path.join(root_dir, "assets", "minecraft", "textures", "block", "texture.properties"),
+    ]
+    for path in candidates:
+        if not os.path.isfile(path):
+            errors.append(f"File texture.properties mancante in {path}")
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if "format=lab-pbr" not in content.replace(" ", ""):
+                errors.append(f"Contenuto 'format=lab-pbr' non trovato in {path}")
+        except Exception as e:
+            errors.append(f"Errore lettura {path}: {e}")
+    return errors
+
+def collect_base_names(target_dir):
+    if not os.path.isdir(target_dir):
+        return []
+    names = set()
+    for fname in os.listdir(target_dir):
+        if fname.endswith(".png") and not fname.endswith("_n.png") and not fname.endswith("_s.png"):
+            names.add(fname[:-4])
+    return sorted(names)
+
 def main():
     parser = argparse.ArgumentParser(description="Aetheria LabPBR 1.3 Texture Validator")
     parser.add_argument("--strict", action="store_true", help="Fallisce con exit code 1 se una texture del subset manca o non è conforme")
     parser.add_argument("--subset", type=str, default=None, help="Lista di blocchi separati da virgola o percorso file con la lista dei blocchi")
+    parser.add_argument("--all", action="store_true", help="Scansiona tutte le texture (blocchi e item) del resource pack")
     args = parser.parse_args()
 
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     manifest_path = os.path.join(root_dir, "mvp-60-blocks.json")
-    textures_dir = os.path.join(root_dir, "assets", "minecraft", "textures", "block")
-    
-    if args.subset:
+    block_dir = os.path.join(root_dir, "assets", "minecraft", "textures", "block")
+    item_dir = os.path.join(root_dir, "assets", "minecraft", "textures", "item")
+
+    print(f"==================================================")
+    print(f" AETHERIA LABPBR 1.3 VALIDATOR - MC 1.21.1        ")
+    print(f" Modalità Strict: {'ATTIVA' if args.strict else 'DISATTIVATA'}")
+    print(f" Modalità All Assets: {'ATTIVA' if args.all else 'DISATTIVATA'}")
+    print(f" Directory root pack: {root_dir}")
+    print(f"==================================================")
+
+    # 1. Verifica texture.properties
+    prop_errors = check_texture_properties(root_dir)
+    for p_err in prop_errors:
+        print(f" [FAIL-PROP] {p_err}")
+
+    targets = [] # Tuple di (nome, directory, categoria)
+    if args.all:
+        for b in collect_base_names(block_dir):
+            targets.append((b, block_dir, "block"))
+        for it in collect_base_names(item_dir):
+            targets.append((it, item_dir, "item"))
+    elif args.subset:
         if os.path.exists(args.subset):
             with open(args.subset, "r", encoding="utf-8") as f:
                 target_blocks = [line.strip() for line in f if line.strip() and not line.startswith("#")]
         else:
             target_blocks = [b.strip() for b in args.subset.split(",") if b.strip()]
+        for b in target_blocks:
+            targets.append((b, block_dir, "block"))
     else:
         if not os.path.exists(manifest_path):
             print(f"[FATAL] Manifest non trovato: {manifest_path}")
@@ -187,32 +241,35 @@ def main():
         target_blocks = []
         for cat, blocks in manifest["categories"].items():
             target_blocks.extend(blocks)
+        for b in target_blocks:
+            targets.append((b, block_dir, "block"))
         
-    print(f"==================================================")
-    print(f" AETHERIA LABPBR 1.3 VALIDATOR - MC 1.21.1        ")
-    print(f" Modalità Strict: {'ATTIVA' if args.strict else 'DISATTIVATA'}")
-    print(f" Totale blocchi in esame: {len(target_blocks)}")
-    print(f" Directory texture: {textures_dir}")
-    print(f"==================================================")
+    print(f" Totale asset in esame: {len(targets)}")
     
     failed_count = 0
     valid_count = 0
     
-    for block in target_blocks:
-        errs, warns = validate_texture_set(block, textures_dir, strict_labpbr=args.strict)
+    for name, directory, kind in targets:
+        errs, warns = validate_texture_set(name, directory, strict_labpbr=args.strict)
         if errs:
             failed_count += 1
-            print(f" [FAIL] {block}: {'; '.join(errs)}")
+            print(f" [FAIL] [{kind}] {name}: {'; '.join(errs)}")
         else:
             valid_count += 1
-            print(f" [PASS] {block} (Albedo, _n, _s OK)")
+            if not args.all:
+                print(f" [PASS] {name} (Albedo, _n, _s OK)")
             
+    if args.all:
+        print(f" [PASS-ALL] Validate con successo {valid_count} texture set (blocchi + item).")
+
+    total_failures = failed_count + len(prop_errors)
     print(f"\nEsito Validazione:")
-    print(f"- Conclusi e conformi: {valid_count}/{len(target_blocks)}")
-    print(f"- Non conformi / Mancanti: {failed_count}/{len(target_blocks)}")
+    print(f"- Conclusi e conformi: {valid_count}/{len(targets)}")
+    print(f"- Non conformi / Mancanti: {failed_count}/{len(targets)}")
+    print(f"- Errori configurazione texture.properties: {len(prop_errors)}")
     
-    if args.strict and failed_count > 0:
-        print("\n[STRICT CHECK FAILED] Alcune texture non rispettano i requisiti LabPBR 1.3.")
+    if args.strict and total_failures > 0:
+        print("\n[STRICT CHECK FAILED] Alcune texture o configurazioni non rispettano i requisiti LabPBR 1.3.")
         sys.exit(1)
         
     sys.exit(0)
