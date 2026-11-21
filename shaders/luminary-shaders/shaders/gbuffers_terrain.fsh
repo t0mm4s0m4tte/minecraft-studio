@@ -335,7 +335,10 @@ void main() {
             isMetal = 1.0;
             F0 = vec3(0.95, 0.64, 0.54);
             smoothness = 0.50;
-        } else if (vBlockId == 10018 || vBlockId == 5) {
+        } else if (vBlockId == 6) {
+            smoothness = 0.92;
+            F0 = vec3(0.04);
+        } else if (vBlockId == 10018) {
             sss = max(sss, 0.65);
         }
     }

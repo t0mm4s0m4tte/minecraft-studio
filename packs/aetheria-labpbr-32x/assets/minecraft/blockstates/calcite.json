@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/calcite",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/calcite",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/calcite",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/calcite",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}

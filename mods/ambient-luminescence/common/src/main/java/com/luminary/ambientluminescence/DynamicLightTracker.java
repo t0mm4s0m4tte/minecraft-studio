@@ -1,28 +1,17 @@
 package com.luminary.ambientluminescence;
 
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Spatial light tracking engine with radial 3D block light falloff (radius 14)
+ * Spatial light tracking engine with precomputed 3D radial falloff (radius 4..14)
  * and dirty-chunk tracking for Sodium + Iris + Vanilla chunk light rebuilds.
- * Uses zero-allocation double-buffering during client render/tick loops.
+ * Strictly zero-allocation double-buffering during client render/tick loops.
  */
 public final class DynamicLightTracker {
-    public static final class LightNode {
-        public final long packedPos;
-        public final int luminance;
-        public long lastTickUpdated;
-
-        public LightNode(long packedPos, int luminance, long tick) {
-            this.packedPos = packedPos;
-            this.luminance = luminance;
-            this.lastTickUpdated = tick;
-        }
-    }
-
     private static final Long2IntOpenHashMap MAP_A = new Long2IntOpenHashMap();
     private static final Long2IntOpenHashMap MAP_B = new Long2IntOpenHashMap();
     private static final LongOpenHashSet DIRTY_A = new LongOpenHashSet();
@@ -31,17 +20,26 @@ public final class DynamicLightTracker {
     private static final Long2IntOpenHashMap PREV_SOURCES = new Long2IntOpenHashMap();
     private static final Long2IntOpenHashMap CURR_SOURCES = new Long2IntOpenHashMap();
 
+    private static final int[][][] DIST_COST = new int[15][15][15];
+
     private static Long2IntOpenHashMap activeWorkingMap;
     private static LongOpenHashSet activeDirtySet;
-
     private static final AtomicReference<Long2IntOpenHashMap> LIGHT_MAP_SNAPSHOT;
-    private static long currentClientTick = 0;
 
     static {
         MAP_A.defaultReturnValue(0);
         MAP_B.defaultReturnValue(0);
         PREV_SOURCES.defaultReturnValue(0);
         CURR_SOURCES.defaultReturnValue(0);
+
+        for (int x = 0; x <= 14; x++) {
+            for (int y = 0; y <= 14; y++) {
+                for (int z = 0; z <= 14; z++) {
+                    double dist = Math.sqrt(x * x + y * y + z * z);
+                    DIST_COST[x][y][z] = (int) Math.round(dist);
+                }
+            }
+        }
 
         activeWorkingMap = MAP_A;
         activeDirtySet = DIRTY_A;
@@ -51,18 +49,16 @@ public final class DynamicLightTracker {
     private DynamicLightTracker() {}
 
     public static void onClientTick() {
-        currentClientTick++;
         synchronized (MAP_A) {
-            // Detect which light sources moved, appeared, or disappeared since last tick
             activeDirtySet.clear();
-            for (Long2IntOpenHashMap.Entry entry : CURR_SOURCES.long2IntEntrySet()) {
+            for (Long2IntMap.Entry entry : Long2IntMaps.fastIterable(CURR_SOURCES)) {
                 long pos = entry.getLongKey();
                 int lum = entry.getIntValue();
                 if (PREV_SOURCES.get(pos) != lum) {
                     markSectionsAround(unpackX(pos), unpackY(pos), unpackZ(pos), lum);
                 }
             }
-            for (Long2IntOpenHashMap.Entry entry : PREV_SOURCES.long2IntEntrySet()) {
+            for (Long2IntMap.Entry entry : Long2IntMaps.fastIterable(PREV_SOURCES)) {
                 long pos = entry.getLongKey();
                 int prevLum = entry.getIntValue();
                 if (CURR_SOURCES.get(pos) != prevLum) {
@@ -74,7 +70,6 @@ public final class DynamicLightTracker {
             PREV_SOURCES.putAll(CURR_SOURCES);
             CURR_SOURCES.clear();
 
-            // Swap working map with published snapshot with zero allocations
             Long2IntOpenHashMap publishedMap = activeWorkingMap;
             LIGHT_MAP_SNAPSHOT.set(publishedMap);
 
@@ -111,10 +106,6 @@ public final class DynamicLightTracker {
         }
     }
 
-    /**
-     * Registers a dynamic light source and propagates radial falloff into surrounding blocks
-     * so dropped torches, items, and entities illuminate a smooth 3D sphere of blocks!
-     */
     public static boolean updateEntitySource(int entityId, int blockX, int blockY, int blockZ, int luminance) {
         if (luminance <= 0) return false;
         int clampedLum = Math.min(luminance, 15);
@@ -126,21 +117,20 @@ public final class DynamicLightTracker {
                 CURR_SOURCES.put(centerPacked, clampedLum);
             }
 
-            // Ensure center block always has exact source luminance
             if (clampedLum > activeWorkingMap.get(centerPacked)) {
                 activeWorkingMap.put(centerPacked, clampedLum);
             }
 
-            // Radial Euclidean falloff across nearby blocks
             int radius = Math.min(clampedLum - 1, Math.max(4, Math.min(LuminescenceConfig.get().maxRadius, 14)));
             for (int dx = -radius; dx <= radius; dx++) {
-                int maxDy = radius - Math.abs(dx);
+                int ax = Math.abs(dx);
+                int maxDy = radius - ax;
                 for (int dy = -maxDy; dy <= maxDy; dy++) {
-                    int maxDz = maxDy - Math.abs(dy);
+                    int ay = Math.abs(dy);
+                    int maxDz = maxDy - ay;
                     for (int dz = -maxDz; dz <= maxDz; dz++) {
                         if (dx == 0 && dy == 0 && dz == 0) continue;
-                        double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                        int falloffLum = (int) Math.round(clampedLum - dist * 1.25);
+                        int falloffLum = clampedLum - DIST_COST[ax][ay][Math.abs(dz)];
                         if (falloffLum > 0) {
                             long p = packPos(blockX + dx, blockY + dy, blockZ + dz);
                             int cur = activeWorkingMap.get(p);
@@ -153,10 +143,6 @@ public final class DynamicLightTracker {
             }
         }
         return true;
-    }
-
-    public static void removeEntitySource(int entityId) {
-        // Handled automatically by tick double-buffering
     }
 
     public static int getLuminanceAt(int blockX, int blockY, int blockZ) {

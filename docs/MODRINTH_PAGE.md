@@ -8,22 +8,27 @@ The suite combines a multi-loader dynamic lighting engine, a complete 32x LabPBR
 
 ## 🌟 The Triptych Components
 
-### 1. Ambient Luminescence (v1.8.0)
+| Aetheria 32x Showcase | LabPBR 1.3 Channel Breakdown |
+|:---:|:---:|
+| ![Aetheria Showcase](branding/aetheria_32x_showcase_grid.png) | ![LabPBR Breakdown](branding/labpbr_channel_breakdown.png) |
+
+### 1. Ambient Luminescence (v1.9.0)
 *Platform-agnostic dynamic lighting for Fabric & NeoForge.*
-- **Zero Per-Frame Allocation**: Built on high-performance FastUtil primitive collections and double-buffered spatial caches.
+- **Zero Per-Frame Allocation**: Built on FastUtil primitive collections, double-buffered spatial caches, `Long2IntMaps.fastIterable`, and a precomputed 3D `DIST_COST` LUT (`O(1)` lookup).
 - **Asynchronous Client Configuration**: Non-blocking config (`config/ambient_luminescence.json`) initialized on `Util.ioPool()`. Customise maximum light radius (clamped `4..14`), entity illumination, dropped item glows, and fire entity lighting.
 - **Full MC 1.21.1 Coverage**: Out-of-the-box dynamic lights for copper bulbs (all oxidation stages), froglights, end rods, campfires, beacons, conduits, enchanting tables, dropped items, and living entities (`Allay`, `EndCrystal`, `Blaze`, `MagmaCube`, fireballs, spectral arrows).
 - **Physical Immersion**: Real-time underwater flame extinguishment for torches and campfires.
 
-### 2. Aetheria LabPBR 32x (v1.8.0)
+### 2. Aetheria LabPBR 32x (v1.9.0)
 *A pristine 32x32 LabPBR 1.3 material pack covering the entire vanilla catalog.*
 - **1,620 Asset Sets (4,860 RGBA PNGs)**: Complete coverage for 1,015 blocks and 605 items validated strictly against LabPBR 1.3 specs (`--strict --all` 1620/1620 PASS).
 - **Physical Normals & Height**: Clean normal reconstruction (`_n.png`) with ambient occlusion in Blue and heightfield displacement in Alpha.
 - **Material Response**: Fine-tuned smoothness, F0 metalness, porosity, subsurface scattering, and bounded emissives (`_s.png`).
-- **29 Seamless Anti-Tiling Blockstates**: Multi-rotation variants (`0° / 90° / 180° / 270°`) eliminating repetitive grid patterns on terrain and architecture (stone, deepslate, granite, diorite, tuff, mud, clay, stone bricks, deepslate tiles, moss, blackstone, and soul soils).
+- **54 Seamless Anti-Tiling Blockstates**: Multi-rotation variants (`0° / 90° / 180° / 270°`) eliminating repetitive grid patterns on terrain and architecture (stone, deepslate, granite, diorite, tuff, mud, clay, stone bricks, deepslate tiles, moss, blackstone, soul soils, tuff bricks, prismarines, nether bricks, end stone bricks, calcite, terracotta, obsidian, purpur, snow and ice).
 
-### 3. Luminary Shaders (v1.8.0)
+### 3. Luminary Shaders (v1.9.0)
 *High-fidelity Iris GLSL shader pipeline targeting maximum visual payoff within tight GPU frame budgets.*
+- **Cotangent 3D Normal Mapping**: Full screen-space cotangent normal decoding (`_n.png`) on all 605 first-person held items and living entities.
 - **Energy-Preserving SSR**: View-space screen-space reflections with binary search refinement, dynamic rough jitter-blur, and smooth sky fallback gradient during ray misses.
 - **5-Tap Tent Bloom**: Karis/Tent filter highlights on `colortex3` delivering soft, cinematic glow on emissive blocks and torches without light bleeding artifacts.
 - **Volumetric Godrays & Underwater Shafts**: Dithered raymarching with Henyey-Greenstein forward scattering and underwater caustic shafts.
@@ -59,9 +64,9 @@ The suite combines a multi-loader dynamic lighting engine, a complete 32x LabPBR
 ## 📦 Installation Guide
 
 1. Download the release artifacts from Modrinth / GitHub:
-   - `ambient_luminescence-fabric-1.8.0.jar` (or `neoforge`)
-   - `Aetheria-LabPBR-32x-1.8.0.zip`
-   - `Luminary-Shaders-1.8.0.zip`
+   - `ambient_luminescence-fabric-1.9.0.jar` (or `neoforge`)
+   - `Aetheria-LabPBR-32x-1.9.0.zip`
+   - `Luminary-Shaders-1.9.0.zip`
 2. Place `ambient_luminescence-*.jar` into your `.minecraft/mods/` directory.
 3. Place `Aetheria-LabPBR-32x-1.8.0.zip` into your `.minecraft/resourcepacks/` directory and enable it in **Options > Resource Packs**.
 4. Place `Luminary-Shaders-1.8.0.zip` into your `.minecraft/shaderpacks/` directory and select it in **Video Settings > Shader Packs**.

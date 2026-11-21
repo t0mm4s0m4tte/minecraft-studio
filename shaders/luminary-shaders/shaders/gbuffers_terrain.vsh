@@ -57,11 +57,12 @@ void main() {
 
     vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
 
-#ifdef FOLIAGE_WAVING
-    // Micro-waving per foglie, erba e vegetazione organica (ID 10018 o blocco 5)
     int blockId = int(mc_Entity.x + 0.5);
     vBlockId = blockId;
-    if (blockId == 10018 || blockId == 5) {
+
+#ifdef FOLIAGE_WAVING
+    // Micro-waving per foglie, erba e vegetazione organica (ID 10018)
+    if (blockId == 10018) {
         vec3 worldApprox = (gbufferModelViewInverse * viewPos).xyz;
         float waveSpeed = frameTimeCounter * 2.2;
         // Oscillazione sinusoidale multi-frequenza ancorata alla posizione mondo

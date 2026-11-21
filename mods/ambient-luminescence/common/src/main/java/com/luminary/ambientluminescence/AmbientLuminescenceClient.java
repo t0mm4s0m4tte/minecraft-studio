@@ -30,6 +30,7 @@ import net.minecraft.world.item.component.BlockItemStateProperties;
 public final class AmbientLuminescenceClient {
     public static final String MOD_ID = "ambient_luminescence";
     private static int lastHeldLuminance = 0;
+    private static int configPollTicks = 0;
 
     private AmbientLuminescenceClient() {}
 
@@ -41,6 +42,12 @@ public final class AmbientLuminescenceClient {
         if (client == null) return;
 
         LuminescenceConfig.initAsync(client.gameDirectory.toPath().resolve("config"));
+        configPollTicks++;
+        if (configPollTicks >= 100) {
+            configPollTicks = 0;
+            LuminescenceConfig.pollReloadAsync();
+        }
+
         LuminescenceConfig cfg = LuminescenceConfig.get();
         if (!cfg.enabled) {
             DynamicLightTracker.clear();
@@ -54,11 +61,12 @@ public final class AmbientLuminescenceClient {
             return;
         }
 
-        // 1. Process local player main-hand and off-hand light (with underwater flame rule)
+        // 1. Process local player main-hand, off-hand, and helmet light (with underwater flame rule)
         boolean playerUnderwater = player.isUnderWater();
         int mainHandLum = getStackLuminance(player.getMainHandItem(), playerUnderwater && cfg.underwaterFlameExtinguish);
         int offHandLum = getStackLuminance(player.getOffhandItem(), playerUnderwater && cfg.underwaterFlameExtinguish);
-        int playerLum = Math.max(mainHandLum, offHandLum);
+        int headLum = getStackLuminance(player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD), playerUnderwater && cfg.underwaterFlameExtinguish);
+        int playerLum = Math.max(Math.max(mainHandLum, offHandLum), headLum);
         if (cfg.lightFireEntities && player.isOnFire()) {
             playerLum = Math.max(playerLum, 15);
         }
@@ -105,6 +113,13 @@ public final class AmbientLuminescenceClient {
                     entityLum = 12;
                 } else if (entity instanceof SmallFireball || entity instanceof LargeFireball) {
                     entityLum = 12;
+                }
+                if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                    int heldLum = Math.max(
+                        getStackLuminance(living.getMainHandItem(), underwater && cfg.underwaterFlameExtinguish),
+                        getStackLuminance(living.getOffhandItem(), underwater && cfg.underwaterFlameExtinguish)
+                    );
+                    entityLum = Math.max(entityLum, heldLum);
                 }
             }
 
@@ -173,7 +188,8 @@ public final class AmbientLuminescenceClient {
             }
         } catch (Throwable ignored) {}
 
-        return DynamicLightRegistry.getLuminance(itemId);
+        int fastLum = DynamicLightRegistry.getLuminance(stack.getItem());
+        return fastLum > 0 ? fastLum : DynamicLightRegistry.getLuminance(itemId);
     }
 
     public static int getLastHeldLuminance() {

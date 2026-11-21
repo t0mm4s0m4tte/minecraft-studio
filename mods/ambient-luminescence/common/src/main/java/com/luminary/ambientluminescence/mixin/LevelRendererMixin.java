@@ -22,4 +22,16 @@ public class LevelRendererMixin {
             cir.setReturnValue(dynamicBlockLight | (skyLight << 16));
         }
     }
+
+    @Inject(method = "getLightColor(Lnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)I", at = @At("RETURN"), cancellable = true, require = 0)
+    private static void ambientLuminescence$injectDynamicLightWithState(BlockAndTintGetter level, net.minecraft.world.level.block.state.BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+        int dynamicLight = DynamicLightTracker.getLuminanceAt(pos.getX(), pos.getY(), pos.getZ());
+        if (dynamicLight > 0) {
+            int original = cir.getReturnValue();
+            int blockLight = original & 0xFFFF;
+            int skyLight = (original >> 16) & 0xFFFF;
+            int dynamicBlockLight = Math.max(blockLight, dynamicLight << 4);
+            cir.setReturnValue(dynamicBlockLight | (skyLight << 16));
+        }
+    }
 }

@@ -3,6 +3,9 @@
 ![Minecraft Studio 1.21.1 Triptych Hero Banner](docs/branding/minecraft_studio_hero_banner.png)
 
 [![Build Multi-Loader & Validate Assets](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml/badge.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg)](https://www.minecraft.net/)
+[![Download Latest Release](https://img.shields.io/badge/Download-v1.9.0-blue.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/releases/latest)
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%99%A5-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/t0mm4s0m4tte)
 
 A high-performance modular graphics and modding suite for **Minecraft Java Edition 1.21.1**, designed around the **Iris + Sodium** pipeline and the **LabPBR 1.3** standard. It delivers lag-free dynamic lighting, a complete 32x PBR texture collection, and zero-click integration between resource pack and custom shaders.
@@ -13,9 +16,9 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 
 | Icon | Module | Path | Role | Technical Target |
 |---|---|---|---|---|
-| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Multi-loader client mod (Fabric + NeoForge) for dynamic lighting on players, dropped items, and Trial Chambers 1.21 blocks | Java 21, zero per-frame allocations, async JSON config |
-| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | 32x32 RGBA resource pack with normals, AO, height (`_n`), smoothness, F0/metalness, porosity and emissives (`_s`) across 1,015 blocks and 605 items (4,860 PNGs) with 29 anti-tiling variants | 100% MC 1.21.1 coverage (`--strict --all` 1620/1620 PASS) |
-| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Iris GLSL shader pack (`#version 330 compatibility`) with GGX PBR, Beer-Lambert water waves, 3D POM, energy-preserving SSR, 5-tap Tent bloom, volumetric godrays, and dedicated weather stage | Target budget `<= 3.8 ms` GPU on `Balanced` |
+| <img src="docs/branding/ambient_luminescence_logo_512.png" width="64" alt="Ambient Luminescence"/> | **Ambient Luminescence** | `mods/ambient-luminescence` | Multi-loader client mod (Fabric + NeoForge) for dynamic lighting on players, dropped items, and Trial Chambers 1.21 blocks | Java 21, zero per-frame allocations, async JSON config with hot-reload |
+| <img src="docs/branding/aetheria_labpbr_logo_512.png" width="64" alt="Aetheria LabPBR 32x"/> | **Aetheria LabPBR 32x** | `packs/aetheria-labpbr-32x` | 32x32 RGBA resource pack with normals, AO, height (`_n`), smoothness, F0/metalness, porosity and emissives (`_s`) across 1,015 blocks and 605 items (4,860 PNGs) with 54 anti-tiling variants | 100% MC 1.21.1 coverage (`--strict --all` 1620/1620 PASS + JSON blockstates validation) |
+| <img src="docs/branding/luminary_shaders_logo_512.png" width="64" alt="Luminary Shaders"/> | **Luminary Shaders** | `shaders/luminary-shaders` | Iris GLSL shader pack (`#version 330 compatibility`) with GGX PBR, Beer-Lambert water waves, 3D POM, energy-preserving SSR, 5-tap Tent bloom, volumetric godrays, dedicated weather stage and full static QA gate | Target budget `<= 3.8 ms` GPU on `Balanced` |
 
 ---
 
@@ -23,15 +26,28 @@ A high-performance modular graphics and modding suite for **Minecraft Java Editi
 
 Check out the automated visual QA contact sheets verifying seamless 3x3 mosaics and LabPBR lighting response:
 
-| Seamless 3x3 Anti-Tiling Mosaic | Synthetic LabPBR Lit Preview (Normals + Specular) |
+| Aetheria 32x Showcase Grid | LabPBR 1.3 Channel Breakdown |
 |:---:|:---:|
+| ![Aetheria Showcase](docs/branding/aetheria_32x_showcase_grid.png) | ![LabPBR Breakdown](docs/branding/labpbr_channel_breakdown.png) |
+| **Seamless 3x3 Anti-Tiling Mosaic** | **Synthetic LabPBR Lit Preview (Normals + Specular)** |
 | ![Seamless 3x3](docs/branding/contact_sheet_3x3.png) | ![Lit Preview](docs/branding/contact_sheet_lit.png) |
 
 Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE.md](docs/MODRINTH_PAGE.md).
 
 ---
 
-## Shader Profiles (v1.8.0)
+## Why Minecraft Studio Triptych?
+
+| Feature | Traditional Fragmented Setup | Minecraft Studio Triptych (v1.9.0) |
+|---|---|---|
+| **LabPBR 1.3 Calibration** | Manual shader tweaks & broken speculars | **Zero-Click** native calibration across 1,620 assets |
+| **GPU Frame Budget (1440p)** | Heavy 8–14 ms passes | **`<= 3.8 ms`** target budget on `Balanced` |
+| **Dynamic Lighting** | Per-frame GC spikes & entity lag | **Zero-Allocation** Double-Buffered LUT (`O(1)` lookup) |
+| **First-Person & Entities** | Flat albedo or missing normal maps | **Full Cotangent 3D Normal Mapping** on 605 items & mobs |
+
+---
+
+## Shader Profiles (v1.9.0)
 
 | Profile | Shadows & GGX Specular | LabPBR 1.3, SSS & Wetness | SSR & Volumetric Godrays | Atmosphere, AA & Optics | POM & AO |
 |---|---|---|---|---|---|
@@ -48,9 +64,9 @@ Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE
 - **Required Mods**: Fabric Loader `>= 0.16.5` + Fabric API (or NeoForge `21.1.65+`) with **Sodium** and **Iris**
 
 After generating packages in `dist/` with `scripts/package_release.py`:
-1. Copy `ambient_luminescence-fabric-1.8.0.jar` (or `neoforge`) into `.minecraft/mods/`.
-2. Copy `Aetheria-LabPBR-32x-1.8.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
-3. Copy `Luminary-Shaders-1.8.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
+1. Copy `ambient_luminescence-fabric-1.9.0.jar` (or `neoforge`) into `.minecraft/mods/`.
+2. Copy `Aetheria-LabPBR-32x-1.9.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
+3. Copy `Luminary-Shaders-1.9.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
 
 ---
 
@@ -81,6 +97,13 @@ Detailed architectural specifications, PBR channel encodings, Iris buffer layout
 
 ---
 
+## Custom SMP Server & Creator Editions
+
+Looking for branded LabPBR blocks, custom server logos, or dedicated thumbnail-ready shader presets for your survival SMP or YouTube series? Check out [docs/MODRINTH_PAGE.md](docs/MODRINTH_PAGE.md) or reach out via [GitHub Sponsors (@t0mm4s0m4tte)](https://github.com/sponsors/t0mm4s0m4tte).
+
+---
+
 ## Support & Sponsorship
 
 If you enjoy the Minecraft Studio suite or use it in your SMP servers and modpacks, consider supporting ongoing development via [GitHub Sponsors (@t0mm4s0m4tte)](https://github.com/sponsors/t0mm4s0m4tte). Your sponsorship helps fund continuous PBR asset expansion, shader performance tuning, and multi-loader mod maintenance.
+

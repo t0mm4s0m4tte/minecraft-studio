@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DynamicLightTest {
     @BeforeEach
     public void setup() {
+        LuminescenceConfig.loadFromPath(null);
         DynamicLightTracker.clear();
     }
 
@@ -113,5 +114,20 @@ public class DynamicLightTest {
         DynamicLightTracker.onClientTick();
         assertNull(DynamicLightTracker.consumeDirtySections());
         assertEquals(0, DynamicLightTracker.getLuminanceAt(20, 64, 20));
+    }
+
+    @Test
+    public void testMaxRadiusFalloffExtension(@TempDir Path tmp) {
+        Path configPath = tmp.resolve("ambient_luminescence.json");
+        LuminescenceConfig cfg = new LuminescenceConfig();
+        cfg.maxRadius = 14;
+        LuminescenceConfig.saveToPath(configPath, cfg);
+        LuminescenceConfig.loadFromPath(configPath);
+
+        DynamicLightTracker.updateEntitySource(200, 0, 64, 0, 15);
+        DynamicLightTracker.onClientTick();
+
+        assertTrue(DynamicLightTracker.getLuminanceAt(13, 64, 0) > 0);
+        assertEquals(0, DynamicLightTracker.getLuminanceAt(15, 64, 0));
     }
 }

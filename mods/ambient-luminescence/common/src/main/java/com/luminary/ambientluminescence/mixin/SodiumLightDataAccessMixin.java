@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * - i bit 8..11 sono Luminance (LU)
  */
 @Pseudo
-@Mixin(targets = "net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess", remap = false)
+@Mixin(targets = {"net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess", "me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess"}, remap = false)
 public class SodiumLightDataAccessMixin {
     @Inject(method = "compute(III)I", at = @At("RETURN"), cancellable = true, remap = false, require = 0)
     private void ambientLuminescence$injectSodiumDynamicLight(int x, int y, int z, CallbackInfoReturnable<Integer> cir) {

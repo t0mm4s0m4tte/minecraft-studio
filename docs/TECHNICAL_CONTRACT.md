@@ -1,6 +1,6 @@
 # TECHNICAL ARCHITECTURE CONTRACT (TAC) — MINECRAFT STUDIO SUITE
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
-**Spec Version**: 1.8.0-RELEASE  
+**Spec Version**: 1.9.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
 **Authors**: `mc-pipeline-architect` in collaboration with `mc-mod-systems-engineer`, `mc-labpbr-texture-artist`, `mc-iris-shader-architect`, `mc-release-qa-gate`.
 
@@ -81,3 +81,4 @@ Mapping in `shaders/block.properties`:
 2. **Stage 3 (Pack)**: Zero untracked subdirectories in `assets/`, valid `texture.properties`, compliant LabPBR 1.3 channels, `validate_labpbr.py --strict` 100% PASS, Python unit tests green.
 3. **Stage 4 (Shaders v1.1.0)**: Deferred pipeline (`deferred.fsh`), sRGB linearization, accurate LabPBR specular tables, Rain Wetness & Dynamic Puddles driven by porosity `_s.b` (`0..64`), analytical world-space water with Beer-Lambert, underwater caustics & Snell refraction, View-Space SSR with binary refinement & edge fade, Volumetric Godrays with Bayer 4x4 dither, world-space Starfield & `moonPhase`, dedicated `gbuffers_weather` stage with camera near-fade, bloom mipmap + Khronos PBR Neutral tone mapping.
 4. **Stage 5 (QA Gate)**: All 6 axes `>= 8/10`, binary `PASS` verdict.
+

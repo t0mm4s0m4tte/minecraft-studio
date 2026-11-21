@@ -55,7 +55,7 @@ def _run_step(cmd, cwd: Path, env=None):
 def build_release(
     root_dir: Path,
     output_dir: Path,
-    version: str = "1.8.0",
+    version: str = "1.9.0",
     skip_gradle: bool = False,
     skip_validate: bool = False,
 ) -> dict:
@@ -111,7 +111,7 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description="Genera archivi release per minecraft-studio")
     parser.add_argument("--output-dir", default=str(repo_root / "dist"), help="Cartella output artefatti")
-    parser.add_argument("--version", default="1.8.0", help="Versione pacchetti release")
+    parser.add_argument("--version", default="1.9.0", help="Versione pacchetti release")
     parser.add_argument("--skip-gradle", action="store_true", help="Salta la build Gradle e usa eventuali JAR gia presenti")
     parser.add_argument("--skip-validate", action="store_true", help="Salta validate_labpbr.py --strict")
     args = parser.parse_args()

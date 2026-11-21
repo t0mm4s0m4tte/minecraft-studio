@@ -55,6 +55,20 @@ vec3 F_Schlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+vec3 perturbNormalCotangent(vec3 geomNormal, vec3 viewPos, vec2 uv, vec2 normalXY) {
+    vec3 dp1 = dFdx(viewPos);
+    vec3 dp2 = dFdy(viewPos);
+    vec2 duv1 = dFdx(uv);
+    vec2 duv2 = dFdy(uv);
+    vec3 dp2perp = cross(dp2, geomNormal);
+    vec3 dp1perp = cross(geomNormal, dp1);
+    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+    float invmax = inversesqrt(max(dot(T, T), dot(B, B)) + 0.00001);
+    float normalZ = sqrt(max(0.02, 1.0 - dot(normalXY, normalXY)));
+    return normalize(T * (normalXY.x * invmax) + B * (normalXY.y * invmax) + geomNormal * normalZ);
+}
+
 void main() {
     vec4 tex = texture(gtexture, vTexCoord) * vColor;
     if (tex.a < 0.1) discard;
@@ -76,6 +90,8 @@ void main() {
     vec4 specSample = texture(specular, vTexCoord);
 
     if (normalSample.r > 0.004 || normalSample.g > 0.004) {
+        vec2 normalXY = (normalSample.xy * 2.0 - 1.0) * 1.25;
+        N = perturbNormalCotangent(geomN, vViewPos, vTexCoord, normalXY);
         ao = clamp(pow(normalSample.b, 1.35), 0.20, 1.0);
     }
 

@@ -3,6 +3,14 @@
 All notable changes to the Minecraft Studio suite are documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [1.9.0] - 2026-11-21
+### Added & Fixed
+- **Mod `ambient-luminescence` (v1.9.0)**: Added asynchronous hot-reload polling (`pollReloadAsync()`) triggered every 100 ticks checking `Files.getLastModifiedTime(...)` on `ambient_luminescence.json`. Calibrated dynamic light falloff slope `Math.max(0.85, (double) clampedLum / (radius + 0.8))` allowing dynamic lights to fully illuminate up to `maxRadius = 14`.
+- **Resource Pack `aetheria-labpbr-32x`**: Expanded seamless multi-rotation anti-tiling blockstates from 29 to 54 cubical blocks (adding tuff bricks, prismarine variants, nether bricks, end stone bricks, polished blackstone variants, calcite, terracotta, dripstone, obsidian variants, mud variants, coarse/rooted dirt, cracked deepslate variants, purpur, snow and ice). Integrated strict JSON validation of `pack.mcmeta` and all `blockstates/*.json` in `validate_labpbr.py`.
+- **Shaders `luminary-shaders`**: Fixed `vBlockId` scoping outside `#ifdef FOLIAGE_WAVING` in `gbuffers_terrain.vsh` (fixing Potato profile foliage bug); purged dead `blockId == 5` references from `gbuffers_terrain.vsh`, `shadow.vsh`, and `gbuffers_terrain.fsh`; fixed underwater column depth linear comparison `-vViewPos.z` in `gbuffers_water.fsh`; replaced binary step with smooth sky transition and water-eye check `smoothstep(0.01, 0.12, ssrLen) * float(isEyeInWater == 0)` in `composite.fsh`; updated `block.properties` with MC 1.21.1 emissive IDs and zero duplicates; updated `shaders.properties` release header.
+- **Extended Static GLSL QA Suite**: Added 4 new tests in `tests/test_shaders_static.py` (RENDERTARGETS match layout outputs count, shader `#include` target existence, `en_us.lang` / `it_it.lang` key parity, and no unbounded `while(true)` loops).
+- **CI & Release Tooling**: Added Pillow installation and contact sheet generation step to `.github/workflows/build.yml`; updated default version in `package_release.py` to `1.9.0`.
+
 ## [1.8.0] - 2026-11-21
 ### Added
 - **Asynchronous JSON Client Configuration (`LuminescenceConfig.java`)**: Pure Java non-blocking configuration loader reading `config/ambient_luminescence.json` via `Util.ioPool()`. Configurable max radius (clamped `4..14`), toggles for entity lighting, dropped items, and fire entity lighting with resilient JSON fallback on parse errors.
@@ -13,6 +21,8 @@ The format is based on Keep a Changelog and adheres to Semantic Versioning.
 - **5-Tap Tent Bloom Filter (`final.fsh`)**: Replaced single-tap bloom sampling with a 5-tap cross Tent filter on `colortex3` for smoother highlight rolloff without edge halos.
 - **GLSL Static QA Suite (`tests/test_shaders_static.py`)**: Unit tests enforcing `#version 330 compatibility`, `/* RENDERTARGETS: ... */` annotations, `srgbToLinear` in `gbuffers_*.fsh`, and no duplicate block mappings in `block.properties`.
 - **Modrinth & Marketplace Documentation (`docs/MODRINTH_PAGE.md`)**: Complete release sheet ready for public publishing on Modrinth and CurseForge.
+
+## [1.7.0] - 2026-11-20
 ### Added
 - **Zero-Allocation Double-Buffering Engine (`DynamicLightTracker.java`)**: Pre-allocated dual map buffers (`MAP_A`, `MAP_B`) and dual dirty set buffers (`DIRTY_A`, `DIRTY_B`), eliminating all per-tick heap allocations during dynamic light propagation and dirty chunk discovery.
 - **Full-Pack Strict Validator Mode (`validate_labpbr.py --all`)**: Automated validation over all 1,620 texture sets (1,015 blocks and 605 items = 4,860 PNGs) with custom handling for vanilla 64x flowing fluid textures (`lava_flow`, `water_flow`).

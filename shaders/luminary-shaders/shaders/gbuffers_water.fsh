@@ -92,7 +92,7 @@ void main() {
     vec2 screenUV = gl_FragCoord.xy / vec2(max(viewWidth, 1.0), max(viewHeight, 1.0));
     float opaqueDepthSample = texture(depthtex1, screenUV).r;
     float floorDist = linearizeDepth(opaqueDepthSample);
-    float surfaceDist = length(vViewPos);
+    float surfaceDist = -vViewPos.z;
     float waterColumnDepth = clamp(floorDist - surfaceDist, 0.0, 24.0);
 
     // 3. Legge di Beer-Lambert: I(d) = exp(-sigma * d), il rosso viene assorbito per primo, poi il verde, infine il blu

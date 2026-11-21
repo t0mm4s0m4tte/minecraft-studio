@@ -10,6 +10,7 @@
   "contact": {
     "homepage": "https://github.com/t0mm4s0m4tte/minecraft-studio",
     "sources": "https://github.com/t0mm4s0m4tte/minecraft-studio",
+    "issues": "https://github.com/t0mm4s0m4tte/minecraft-studio/issues",
     "sponsor": "https://github.com/sponsors/t0mm4s0m4tte"
   },
   "license": "MIT",

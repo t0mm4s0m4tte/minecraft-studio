@@ -94,7 +94,11 @@ public final class DynamicLightRegistry {
         try {
             ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
             if (key != null) {
-                return STRING_LIGHTS.getInt(key.toString());
+                int found = STRING_LIGHTS.getInt(key.toString());
+                if (found > 0) {
+                    ITEM_LIGHTS.put(item, found);
+                }
+                return found;
             }
         } catch (Throwable ignored) {}
         return 0;

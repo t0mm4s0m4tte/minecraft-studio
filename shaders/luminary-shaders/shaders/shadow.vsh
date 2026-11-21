@@ -32,7 +32,7 @@ void main() {
 
 #ifdef FOLIAGE_WAVING
     int blockId = int(mc_Entity.x + 0.5);
-    if (blockId == 10018 || blockId == 5) {
+    if (blockId == 10018) {
         float waveSpeed = frameTimeCounter * 2.2;
         float wave = sin(waveSpeed + vertex.x * 1.5 + vertex.z * 1.2) * 0.035
                    + cos(waveSpeed * 1.4 + vertex.y * 2.0) * 0.02;

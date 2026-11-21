@@ -67,5 +67,57 @@ class TestShadersStatic(unittest.TestCase):
                 )
                 assigned_blocks[name] = block_id
 
+    def test_fsh_rendertargets_match_layout_outputs(self):
+        rt_pattern = re.compile(r"/\*\s*RENDERTARGETS:\s*([^*]+)\*/")
+        layout_pattern = re.compile(r"layout\s*\(\s*location\s*=\s*\d+\s*\)\s*out\s+")
+        for f in self.fsh_files:
+            content = f.read_text(encoding="utf-8")
+            rt_match = rt_pattern.search(content)
+            self.assertIsNotNone(rt_match, f"{f.name} missing RENDERTARGETS directive")
+            rt_count = len([x.strip() for x in rt_match.group(1).split(",") if x.strip()])
+            layout_count = len(layout_pattern.findall(content))
+            self.assertEqual(
+                rt_count,
+                layout_count,
+                f"{f.name}: RENDERTARGETS count ({rt_count}) != layout outputs count ({layout_count})"
+            )
+
+    def test_shader_includes_exist(self):
+        include_pattern = re.compile(r'#include\s+"([^"]+)"')
+        for f in self.vsh_files + self.fsh_files:
+            content = f.read_text(encoding="utf-8")
+            for inc in include_pattern.findall(content):
+                clean_inc = inc.lstrip("/\\")
+                target = self.shaders_dir / clean_inc
+                self.assertTrue(target.is_file(), f"{f.name} includes non-existent file: {inc} (resolved: {target})")
+
+    def test_lang_files_key_parity(self):
+        lang_dir = self.shaders_dir / "lang"
+        en_lang = lang_dir / "en_us.lang"
+        it_lang = lang_dir / "it_it.lang"
+        self.assertTrue(en_lang.is_file(), "en_us.lang not found")
+        self.assertTrue(it_lang.is_file(), "it_it.lang not found")
+
+        def extract_keys(path):
+            keys = set()
+            for line in path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    keys.add(line.split("=", 1)[0].strip())
+            return keys
+
+        en_keys = extract_keys(en_lang)
+        it_keys = extract_keys(it_lang)
+        self.assertEqual(en_keys, it_keys, f"Key mismatch between en_us and it_it: diff={en_keys ^ it_keys}")
+
+    def test_no_unbounded_while_true_loops(self):
+        while_pattern = re.compile(r"while\s*\(\s*true\s*\)")
+        for f in self.vsh_files + self.fsh_files:
+            content = f.read_text(encoding="utf-8")
+            self.assertFalse(
+                while_pattern.search(content),
+                f"{f.name} contains unbounded while(true) loop"
+            )
+
 if __name__ == "__main__":
     unittest.main()

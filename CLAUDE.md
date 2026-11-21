@@ -17,7 +17,7 @@ High-performance graphics and modding studio for Minecraft built on the Iris + S
 
 ## Operational Commands
 ```bash
-# Validate LabPBR Assets (Strict 60-block subset)
+# Validate LabPBR Assets (Strict full 1,620 asset sets --strict --all)
 python packs/aetheria-labpbr-32x/scripts/validate_labpbr.py --strict
 
 # Compile Mod (Fabric + NeoForge)
@@ -37,3 +37,4 @@ python scripts/package_release.py --skip-gradle
 For technical contracts and design specifications, refer to:
 - `docs/TECHNICAL_CONTRACT.md` (SSoT Architecture Contract)
 - `CHANGELOG.md` (Release history and changelog)
+

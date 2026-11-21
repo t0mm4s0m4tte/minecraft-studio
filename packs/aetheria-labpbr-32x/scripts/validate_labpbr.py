@@ -183,6 +183,35 @@ def check_texture_properties(root_dir):
             errors.append(f"Errore lettura {path}: {e}")
     return errors
 
+def check_pack_json_files(root_dir):
+    """Verifica pack.mcmeta e la sintassi JSON dei blockstates anti-tiling."""
+    errors = []
+    pack_mcmeta_path = os.path.join(root_dir, "pack.mcmeta")
+    if not os.path.isfile(pack_mcmeta_path):
+        errors.append("pack.mcmeta mancante")
+    else:
+        try:
+            with open(pack_mcmeta_path, "r", encoding="utf-8-sig") as f:
+                data = json.load(f)
+            if not isinstance(data, dict) or "pack" not in data:
+                errors.append("pack.mcmeta non contiene la chiave 'pack'")
+        except Exception as e:
+            errors.append(f"Errore parsing pack.mcmeta: {e}")
+
+    blockstates_dir = os.path.join(root_dir, "assets", "minecraft", "blockstates")
+    if os.path.isdir(blockstates_dir):
+        for fname in sorted(os.listdir(blockstates_dir)):
+            if fname.endswith(".json"):
+                fpath = os.path.join(blockstates_dir, fname)
+                try:
+                    with open(fpath, "r", encoding="utf-8-sig") as f:
+                        bs_data = json.load(f)
+                    if not isinstance(bs_data, dict) or ("variants" not in bs_data and "multipart" not in bs_data):
+                        errors.append(f"Blockstate {fname} privo di 'variants' o 'multipart'")
+                except Exception as e:
+                    errors.append(f"Errore parsing blockstate {fname}: {e}")
+    return errors
+
 def collect_base_names(target_dir):
     if not os.path.isdir(target_dir):
         return []
@@ -215,6 +244,11 @@ def main():
     prop_errors = check_texture_properties(root_dir)
     for p_err in prop_errors:
         print(f" [FAIL-PROP] {p_err}")
+
+    # 2. Verifica pack.mcmeta e blockstates JSON
+    json_errors = check_pack_json_files(root_dir)
+    for j_err in json_errors:
+        print(f" [FAIL-JSON] {j_err}")
 
     targets = [] # Tuple di (nome, directory, categoria)
     if args.all:
@@ -262,11 +296,12 @@ def main():
     if args.all:
         print(f" [PASS-ALL] Validate con successo {valid_count} texture set (blocchi + item).")
 
-    total_failures = failed_count + len(prop_errors)
+    total_failures = failed_count + len(prop_errors) + len(json_errors)
     print(f"\nEsito Validazione:")
     print(f"- Conclusi e conformi: {valid_count}/{len(targets)}")
     print(f"- Non conformi / Mancanti: {failed_count}/{len(targets)}")
     print(f"- Errori configurazione texture.properties: {len(prop_errors)}")
+    print(f"- Errori JSON pack.mcmeta/blockstates: {len(json_errors)}")
     
     if args.strict and total_failures > 0:
         print("\n[STRICT CHECK FAILED] Alcune texture o configurazioni non rispettano i requisiti LabPBR 1.3.")

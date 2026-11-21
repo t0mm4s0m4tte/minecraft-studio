@@ -333,7 +333,8 @@ void main() {
 
         // Fallback cielo se SSR è debole o mancato ai bordi (outdoor o dipendente da sky exposure)
         float ssrLen = length(ssrColor);
-        float missWeight = 0.35 * (1.0 - step(0.05, ssrLen));
+        float skyMix = 1.0 - smoothstep(0.01, 0.12, ssrLen);
+        float missWeight = 0.35 * skyMix * float(isEyeInWater == 0);
         vec3 skyFallback = computeSSRSkyFallback(-V, N, upPosition, sunPosition, effectiveRain);
         ssrColor = mix(ssrColor, skyFallback, missWeight);
 

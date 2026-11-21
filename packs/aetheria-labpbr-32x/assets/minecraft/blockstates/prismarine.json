@@ -1,0 +1,26 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "minecraft:block/prismarine",
+        "y": 0,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/prismarine",
+        "y": 90,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/prismarine",
+        "y": 180,
+        "weight": 25
+      },
+      {
+        "model": "minecraft:block/prismarine",
+        "y": 270,
+        "weight": 25
+      }
+    ]
+  }
+}
