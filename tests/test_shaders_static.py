@@ -138,5 +138,20 @@ class TestShadersStatic(unittest.TestCase):
             "shadow.vsh does not transform shadowViewPos with shadowModelViewInverse for foliage waving sync"
         )
 
+    def test_composite_world_space_volumetrics_and_view_invariant_sky(self):
+        comp_fsh = self.shaders_dir / "composite.fsh"
+        self.assertTrue(comp_fsh.is_file(), "composite.fsh not found")
+        content = comp_fsh.read_text(encoding="utf-8")
+        self.assertIn(
+            "gbufferModelViewInverse * vec4(sampleView, 1.0)",
+            content,
+            "composite.fsh must transform volumetric sampleView to world-space via gbufferModelViewInverse"
+        )
+        self.assertIn(
+            "dot(sunN, upN)",
+            content,
+            "composite.fsh must compute view-invariant solar elevation via dot(sunN, upN)"
+        )
+
 if __name__ == "__main__":
     unittest.main()

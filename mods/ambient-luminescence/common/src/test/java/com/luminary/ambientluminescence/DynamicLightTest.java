@@ -30,6 +30,12 @@ public class DynamicLightTest {
         assertEquals(14, DynamicLightRegistry.getLuminance("minecraft:end_rod"));
         assertEquals(15, DynamicLightRegistry.getLuminance("minecraft:campfire"));
         assertEquals(10, DynamicLightRegistry.getLuminance("minecraft:soul_campfire"));
+
+        assertEquals(8, DynamicLightRegistry.getLuminance("minecraft:trial_spawner"));
+        assertEquals(12, DynamicLightRegistry.getLuminance("minecraft:vault"));
+        assertEquals(12, DynamicLightRegistry.getLuminance("minecraft:sea_pickle"));
+        assertEquals(6, DynamicLightRegistry.getLuminance("minecraft:candle"));
+        assertEquals(6, DynamicLightRegistry.getLuminance("minecraft:cyan_candle"));
     }
 
     @Test

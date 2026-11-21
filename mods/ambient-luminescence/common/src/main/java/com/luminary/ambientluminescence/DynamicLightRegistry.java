@@ -60,6 +60,34 @@ public final class DynamicLightRegistry {
         register("minecraft:blaze_powder", 6);
         register("minecraft:magma_cream", 6);
         register("minecraft:prismarine_crystals", 6);
+
+        // Extended 1.21.1 Trial Chambers, Sculk, Aquatic & Candles
+        register("minecraft:trial_spawner", 8);
+        register("minecraft:vault", 12);
+        register("minecraft:sea_pickle", 12);
+        register("minecraft:sculk_catalyst", 6);
+        register("minecraft:glow_lichen", 7);
+        register("minecraft:spectral_arrow", 10);
+        register("minecraft:ender_eye", 8);
+        register("minecraft:dragon_egg", 1);
+        register("minecraft:brown_mushroom", 1);
+        register("minecraft:candle", 6);
+        register("minecraft:white_candle", 6);
+        register("minecraft:orange_candle", 6);
+        register("minecraft:magenta_candle", 6);
+        register("minecraft:light_blue_candle", 6);
+        register("minecraft:yellow_candle", 6);
+        register("minecraft:lime_candle", 6);
+        register("minecraft:pink_candle", 6);
+        register("minecraft:gray_candle", 6);
+        register("minecraft:light_gray_candle", 6);
+        register("minecraft:cyan_candle", 6);
+        register("minecraft:purple_candle", 6);
+        register("minecraft:blue_candle", 6);
+        register("minecraft:brown_candle", 6);
+        register("minecraft:green_candle", 6);
+        register("minecraft:red_candle", 6);
+        register("minecraft:black_candle", 6);
     }
 
     private DynamicLightRegistry() {}

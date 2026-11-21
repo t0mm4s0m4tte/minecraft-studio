@@ -3,6 +3,18 @@
 All notable changes to the **Minecraft Studio — Synergic Triptych** suite (`ambient-luminescence`, `aetheria-labpbr-32x`, `luminary-shaders`) are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-21
+
+### Added
+- **World-Space Volumetric Light & Caustic Shafts Alignment (`composite.fsh`)**: Transformed raymarching `sampleView` points from camera view-space to player-centered world-space via `gbufferModelViewInverse` prior to `shadowModelView` projection, resolving pitch-dependent volumetric light swimming and aligning sun shafts and underwater caustic beams to true world orientation.
+- **View-Invariant SSR Sky Fallback Solar Elevation (`composite.fsh`)**: Replaced camera-pitch dependent `normalize(sunDir).y` with view-invariant solar elevation `dot(normalize(sunDir), normalize(upDir))` in `computeSSRSkyFallback`, ensuring rock-solid celestial zenith and horizon color gradients during camera tilt.
+- **Hot-Reload Deactivation Dirty-Section Flush (`AmbientLuminescenceClient.java`)**: Added `flushDirtySections(Minecraft client)` helper called immediately when `cfg.enabled` is toggled off at runtime or world state resets, scheduling Sodium/Vanilla chunk rebuilds on all illuminated sections before clearing trackers and eliminating ghost light artifacts.
+- **Subaqueous Flame Extinguishment for Candles (`AmbientLuminescenceClient.java`)**: Extended underwater flame extinguishment rule to all candle variants (`itemId.endsWith("candle")`), properly extinguishing held candles when submerged.
+- **Expanded MC 1.21.1 Dynamic Light Registry (`DynamicLightRegistry.java`)**: Added out-of-the-box dynamic light registrations for Trial Chambers blocks, sculk components, aquatic flora, and candles (`trial_spawner`, `vault`, `sea_pickle`, `sculk_catalyst`, `glow_lichen`, `spectral_arrow`, `ender_eye`, `dragon_egg`, `brown_mushroom`, and all 16 colored candle variants).
+- **Automated Regression Test Suite (`tests/test_shaders_static.py`, `tests/test_package_release.py`)**: Added static verification for volumetric world-space transformation and view-invariant sky dot product, and regression test validating cleanup of stale archives in `dist/`.
+
+---
+
 ## [2.0.0] - 2026-11-21
 
 ### Added

@@ -41,6 +41,10 @@ class TestPackageRelease(unittest.TestCase):
             (mod_dir / "fabric" / "build" / "libs" / "fabric-1.0.0.jar").write_bytes(b"FABRIC")
             (mod_dir / "neoforge" / "build" / "libs" / "neoforge-1.0.0.jar").write_bytes(b"NEOFORGE")
 
+            out.mkdir(parents=True, exist_ok=True)
+            stale_zip = out / "Luminary-Shaders-0.9.0.zip"
+            stale_zip.write_bytes(b"OLD")
+
             artifacts = build_release(
                 root_dir=root,
                 output_dir=out,
@@ -48,6 +52,8 @@ class TestPackageRelease(unittest.TestCase):
                 skip_gradle=True,
                 skip_validate=True,
             )
+
+            self.assertFalse(stale_zip.exists(), "Stale release archives must be cleaned from dist/")
 
             pack_zip = out / "Aetheria-LabPBR-32x-1.0.0.zip"
             shader_zip = out / "Luminary-Shaders-1.0.0.zip"

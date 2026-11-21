@@ -50,6 +50,9 @@ public final class AmbientLuminescenceClient {
 
         LuminescenceConfig cfg = LuminescenceConfig.get();
         if (!cfg.enabled) {
+            lastHeldLuminance = 0;
+            DynamicLightTracker.onClientTick();
+            flushDirtySections(client);
             DynamicLightTracker.clear();
             return;
         }
@@ -146,6 +149,10 @@ public final class AmbientLuminescenceClient {
 
         // 3. Swap double-buffered snapshot & schedule chunk rebuilds on dirty sections
         DynamicLightTracker.onClientTick();
+        flushDirtySections(client);
+    }
+
+    private static void flushDirtySections(Minecraft client) {
         LongOpenHashSet dirty = DynamicLightTracker.consumeDirtySections();
         if (dirty != null && client.levelRenderer != null) {
             LongIterator it = dirty.iterator();
@@ -169,12 +176,13 @@ public final class AmbientLuminescenceClient {
         if (id == null) return 0;
         String itemId = id.toString();
 
-        // Underwater flame extinguishment rule: open-flame torches turn off underwater
+        // Underwater flame extinguishment rule: open-flame torches, campfires and candles turn off underwater
         if (underwater && (itemId.equals("minecraft:torch")
                 || itemId.equals("minecraft:soul_torch")
                 || itemId.equals("minecraft:redstone_torch")
                 || itemId.equals("minecraft:campfire")
-                || itemId.equals("minecraft:soul_campfire"))) {
+                || itemId.equals("minecraft:soul_campfire")
+                || itemId.endsWith("candle"))) {
             return 0;
         }
 

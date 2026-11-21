@@ -27,6 +27,7 @@ uniform sampler2D shadowtex0; // Shadow Map completa
 
 uniform mat4 gbufferProjection;
 uniform mat4 gbufferProjectionInverse;
+uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
 uniform vec3 shadowLightPosition;
@@ -93,11 +94,14 @@ float henyeyGreenstein(float cosTheta, float g) {
 // Fallback cielo per riflessi SSR quando il raymarching non interseca o esce dai bordi
 vec3 computeSSRSkyFallback(vec3 viewDir, vec3 N, vec3 upDir, vec3 sunDir, float rain) {
     vec3 R = reflect(viewDir, N);
-    float upDotR = clamp(dot(R, normalize(upDir)), -1.0, 1.0);
+    vec3 upN = normalize(upDir);
+    vec3 sunN = normalize(sunDir);
+    float upDotR = clamp(dot(R, upN), -1.0, 1.0);
     float elevation = clamp(upDotR * 0.5 + 0.5, 0.0, 1.0);
+    float sunElev = dot(sunN, upN);
 
-    vec3 zenithColor = mix(vec3(0.08, 0.22, 0.55), vec3(0.02, 0.04, 0.10), clamp(1.0 - normalize(sunDir).y, 0.0, 1.0));
-    vec3 horizonColor = mix(vec3(0.45, 0.65, 0.85), vec3(0.70, 0.40, 0.20), clamp(1.0 - abs(normalize(sunDir).y) * 2.0, 0.0, 1.0));
+    vec3 zenithColor = mix(vec3(0.08, 0.22, 0.55), vec3(0.02, 0.04, 0.10), clamp(1.0 - sunElev, 0.0, 1.0));
+    vec3 horizonColor = mix(vec3(0.45, 0.65, 0.85), vec3(0.70, 0.40, 0.20), clamp(1.0 - abs(sunElev) * 2.0, 0.0, 1.0));
     vec3 skyBase = mix(horizonColor, zenithColor, pow(elevation, 1.4));
 
     // Desaturazione e scurimento durante precipitazioni (cielo nuvoloso/tempesta)
@@ -227,8 +231,9 @@ vec3 computeVolumetricLight(vec3 viewPos, float depth, vec2 screenUV, float dith
     for (int i = 0; i < STEPS; i++) {
         vec3 sampleView = startPos + rayDir * (float(i) * stepLength);
 
-        // Trasformazione da View-Space a Shadow-Space
-        vec4 shadowView = shadowModelView * vec4(sampleView, 1.0);
+        // Trasformazione da Camera View-Space -> World-Space -> Shadow-Space
+        vec4 sampleWorld = gbufferModelViewInverse * vec4(sampleView, 1.0);
+        vec4 shadowView = shadowModelView * sampleWorld;
         vec4 shadowClip = shadowProjection * shadowView;
         vec3 spClip = shadowClip.xyz / max(shadowClip.w, 0.00001);
 

@@ -5,7 +5,7 @@
 [![Build Multi-Loader & Validate Assets](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml/badge.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Minecraft 1.21.1](https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg)](https://www.minecraft.net/)
-[![Download Latest Release](https://img.shields.io/badge/Download-v2.0.0-blue.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/releases/latest)
+[![Download Latest Release](https://img.shields.io/badge/Download-v2.1.0-blue.svg)](https://github.com/t0mm4s0m4tte/minecraft-studio/releases/latest)
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%99%A5-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/t0mm4s0m4tte)
 
 A high-performance modular graphics and modding suite for **Minecraft Java Edition 1.21.1**, designed around the **Iris + Sodium** pipeline and the **LabPBR 1.3** standard. It delivers lag-free dynamic lighting, a complete 32x PBR texture collection, and zero-click integration between resource pack and custom shaders.
@@ -38,7 +38,7 @@ Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE
 
 ## Why Minecraft Studio Triptych?
 
-| Feature | Traditional Fragmented Setup | Minecraft Studio Triptych (v2.0.0) |
+| Feature | Traditional Fragmented Setup | Minecraft Studio Triptych (v2.1.0) |
 |---|---|---|
 | **LabPBR 1.3 Calibration** | Manual shader tweaks & broken speculars | **Zero-Click** native calibration across 1,620 assets |
 | **GPU Frame Budget (1440p)** | Heavy 8–14 ms passes | **`<= 3.8 ms`** target budget on `Balanced` |
@@ -47,7 +47,7 @@ Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE
 
 ---
 
-## Shader Profiles (v2.0.0)
+## Shader Profiles (v2.1.0)
 
 | Profile | Shadows & GGX Specular | LabPBR 1.3, SSS & Wetness | SSR & Volumetric Godrays | Atmosphere, AA & Optics | POM & AO |
 |---|---|---|---|---|---|
@@ -64,9 +64,9 @@ Detailed Modrinth & CurseForge publishing guide available at [docs/MODRINTH_PAGE
 - **Required Mods**: Fabric Loader `>= 0.16.5` + Fabric API (or NeoForge `21.1.65+`) with **Sodium** and **Iris**
 
 After generating packages in `dist/` with `scripts/package_release.py`:
-1. Copy `ambient_luminescence-fabric-2.0.0.jar` (or `neoforge`) into `.minecraft/mods/`.
-2. Copy `Aetheria-LabPBR-32x-2.0.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
-3. Copy `Luminary-Shaders-2.0.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
+1. Copy `ambient_luminescence-fabric-2.1.0.jar` (or `neoforge`) into `.minecraft/mods/`.
+2. Copy `Aetheria-LabPBR-32x-2.1.0.zip` into `.minecraft/resourcepacks/` and activate it in Minecraft settings.
+3. Copy `Luminary-Shaders-2.1.0.zip` into `.minecraft/shaderpacks/` and select it in Iris (`Balanced` active by default with preconfigured LabPBR 1.3).
 
 ---
 
