@@ -24,6 +24,7 @@ uniform vec3 cameraPosition;
 uniform vec3 upPosition;
 uniform vec3 sunPosition;
 uniform vec3 shadowLightPosition;
+uniform mat4 gbufferModelViewInverse;
 
 in vec4 vColor;
 in vec2 vTexCoord;
@@ -105,8 +106,8 @@ void main() {
 
 #ifdef WATER_CAUSTICS
     if (waterColumnDepth > 0.05 && waterColumnDepth < 18.0) {
-        vec3 sunDirWorld = normalize(sunPosition);
-        // Proiezione del fondale lungo la direzione della luce celeste per caustiche ancorate al terreno sommerso
+        vec3 sunDirWorld = normalize((gbufferModelViewInverse * vec4(sunPosition, 0.0)).xyz);
+        // Proiezione del fondale lungo la direzione della luce celeste in World-Space
         vec2 floorWorldXZ = worldPos.xz - sunDirWorld.xz * (waterColumnDepth / max(abs(sunDirWorld.y), 0.25));
         float caustics = evaluateCaustics(floorWorldXZ, t);
         float depthFade = smoothstep(0.05, 0.45, waterColumnDepth) * exp(-waterColumnDepth * 0.14);

@@ -183,7 +183,20 @@ void main() {
     occ += clamp((centerLin - d2) * 1.5, 0.0, 1.0) * step(abs(centerLin - d2), 1.2);
     occ += clamp((centerLin - d3) * 1.5, 0.0, 1.0) * step(abs(centerLin - d3), 1.2);
     occ += clamp((centerLin - d4) * 1.5, 0.0, 1.0) * step(abs(centerLin - d4), 1.2);
+#if AO_QUALITY >= 2
+    vec2 pxDiag = px * 0.7071;
+    float d5 = linearizeDepth(texture(depthtex0, vTexCoord + vec2( pxDiag.x,  pxDiag.y)).r);
+    float d6 = linearizeDepth(texture(depthtex0, vTexCoord + vec2(-pxDiag.x,  pxDiag.y)).r);
+    float d7 = linearizeDepth(texture(depthtex0, vTexCoord + vec2( pxDiag.x, -pxDiag.y)).r);
+    float d8 = linearizeDepth(texture(depthtex0, vTexCoord + vec2(-pxDiag.x, -pxDiag.y)).r);
+    occ += clamp((centerLin - d5) * 1.5, 0.0, 1.0) * step(abs(centerLin - d5), 1.2);
+    occ += clamp((centerLin - d6) * 1.5, 0.0, 1.0) * step(abs(centerLin - d6), 1.2);
+    occ += clamp((centerLin - d7) * 1.5, 0.0, 1.0) * step(abs(centerLin - d7), 1.2);
+    occ += clamp((centerLin - d8) * 1.5, 0.0, 1.0) * step(abs(centerLin - d8), 1.2);
+    ssao = 1.0 - (occ * 0.045);
+#else
     ssao = 1.0 - (occ * 0.08);
+#endif
 #endif
 
     vec3 sceneColor = baseColor.rgb * mix(0.88, 1.0, matAO) * ssao;

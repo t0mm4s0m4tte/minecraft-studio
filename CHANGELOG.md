@@ -3,6 +3,27 @@
 All notable changes to the **Minecraft Studio — Synergic Triptych** suite (`ambient-luminescence`, `aetheria-labpbr-32x`, `luminary-shaders`) are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-11-21
+
+### Added
+- **Absolute World-Space Foliage Waving & Vector Direction Sync (`gbuffers_terrain.vsh`, `shadow.vsh`)**: Anchored foliage micro-waving to Absolute World-Space coordinates (`worldPos.xyz + cameraPosition`) before applying model-view matrices (`gbufferModelView` and `shadowModelView`), eliminating camera motion jitter and ensuring shadow pass waves at identical phase and direction as the geometry pass.
+- **World-Space Water Caustic Solar Projection (`gbuffers_water.fsh`)**: Transformed `sunPosition` from view-space into world-space coordinates via `gbufferModelViewInverse`, stabilizing seabed caustic projection coordinates and preventing rotation during player camera pitch and yaw movements.
+- **View-Invariant Hand & Entity Environment IBL (`gbuffers_hand.fsh`, `gbuffers_entities.fsh`)**: Replaced camera-relative `R.y` with view-invariant celestial reflection factor `dot(R, normalize(upPosition))` for ambient IBL reflections on held items and living entities.
+- **Exact LabPBR 1.3 Emissive Decoding (`gbuffers_hand.fsh`, `gbuffers_entities.fsh`)**: Implemented strict specification-compliant LabPBR 1.3 emissive scale `rawEmissive / 254.0` for specular alpha values in range `1..254`.
+- **True 8-Tap Screen-Space Cavity AO for Cinematic Profile (`deferred.fsh`)**: Added 4 diagonal depth samples (`px * 0.7071`) when `AO_QUALITY >= 2`, delivering smooth high-fidelity screen-space cavity ambient occlusion.
+- **1.21.1 `block.properties` Cleanup**: Removed non-vanilla `copper_bulb_lit` identifier and registered `soul_wall_torch`, `redstone_torch`, `redstone_wall_torch`, `trial_spawner`, `vault`, `sculk_catalyst`, `sculk_sensor`, and `calibrated_sculk_sensor` under `block.1`.
+- **Java 21 Mod Hardening (`AmbientLuminescenceClient.java`, `DynamicLightRegistry.java`)**:
+  - Differentiated underwater immersion logic between dropped items/projectiles (`entity.isInWater()`) and living entities (`living.isUnderWater()`).
+  - Added inspection of `BlockItemStateProperties` for `charges=0` (`respawn_anchor` discharged) and `waterlogged=false` on `minecraft:sea_pickle` to prevent false dynamic illumination.
+  - Added dynamic light emission for `DragonFireball`, `WitherSkull` (luminance 12), and `FireworkRocketEntity` (luminance 11).
+  - Extended dynamic light registry with `nether_star` (12), `fire_charge` (10), `brewing_stand` (1), `sculk_sensor` (1), and `calibrated_sculk_sensor` (1).
+  - Ensured `lastHeldLuminance = 0`, tracker tick update, section flush, and tracker clear on world-unload.
+- **Automated QA & Package Suite Expansion (`tests/test_shaders_static.py`, `scripts/package_release.py`)**:
+  - Added 14th static GLSL test `test_absolute_world_waving_water_caustics_and_cavity_ao`.
+  - Updated release packaging script default version target to `2.2.0`.
+
+---
+
 ## [2.1.0] - 2026-11-21
 
 ### Added

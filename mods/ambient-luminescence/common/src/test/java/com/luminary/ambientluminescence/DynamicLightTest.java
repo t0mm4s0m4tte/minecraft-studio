@@ -36,6 +36,9 @@ public class DynamicLightTest {
         assertEquals(12, DynamicLightRegistry.getLuminance("minecraft:sea_pickle"));
         assertEquals(6, DynamicLightRegistry.getLuminance("minecraft:candle"));
         assertEquals(6, DynamicLightRegistry.getLuminance("minecraft:cyan_candle"));
+        assertEquals(12, DynamicLightRegistry.getLuminance("minecraft:nether_star"));
+        assertEquals(10, DynamicLightRegistry.getLuminance("minecraft:fire_charge"));
+        assertEquals(1, DynamicLightRegistry.getLuminance("minecraft:calibrated_sculk_sensor"));
     }
 
     @Test

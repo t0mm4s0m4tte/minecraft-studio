@@ -88,6 +88,11 @@ public final class DynamicLightRegistry {
         register("minecraft:green_candle", 6);
         register("minecraft:red_candle", 6);
         register("minecraft:black_candle", 6);
+        register("minecraft:nether_star", 12);
+        register("minecraft:fire_charge", 10);
+        register("minecraft:brewing_stand", 1);
+        register("minecraft:sculk_sensor", 1);
+        register("minecraft:calibrated_sculk_sensor", 1);
     }
 
     private DynamicLightRegistry() {}

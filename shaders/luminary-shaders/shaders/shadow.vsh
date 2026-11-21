@@ -11,6 +11,8 @@
 
 attribute vec4 mc_Entity;
 uniform float frameTimeCounter;
+uniform vec3 cameraPosition;
+uniform mat4 shadowModelView;
 uniform mat4 shadowModelViewInverse;
 
 out vec4 vTexCoord;
@@ -33,12 +35,14 @@ void main() {
 #ifdef FOLIAGE_WAVING
     int blockId = int(mc_Entity.x + 0.5);
     if (blockId == 10018) {
-        vec3 worldApprox = (shadowModelViewInverse * shadowViewPos).xyz;
+        vec4 worldPos = shadowModelViewInverse * shadowViewPos;
+        vec3 worldAbs = worldPos.xyz + cameraPosition;
         float waveSpeed = frameTimeCounter * 2.2;
-        float wave = sin(waveSpeed + worldApprox.x * 1.5 + worldApprox.z * 1.2) * 0.035
-                   + cos(waveSpeed * 1.4 + worldApprox.y * 2.0) * 0.02;
-        shadowViewPos.x += wave * 0.75;
-        shadowViewPos.z += wave * 0.50;
+        float wave = sin(waveSpeed + worldAbs.x * 1.5 + worldAbs.z * 1.2) * 0.035
+                   + cos(waveSpeed * 1.4 + worldAbs.y * 2.0) * 0.02;
+        worldPos.x += wave * 0.75;
+        worldPos.z += wave * 0.50;
+        shadowViewPos = shadowModelView * worldPos;
     }
 #endif
 

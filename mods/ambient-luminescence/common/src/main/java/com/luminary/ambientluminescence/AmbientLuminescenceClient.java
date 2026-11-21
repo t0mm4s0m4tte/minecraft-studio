@@ -10,8 +10,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.projectile.DragonFireball;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Blaze;
@@ -60,6 +63,9 @@ public final class AmbientLuminescenceClient {
         Player player = client.player;
         ClientLevel level = client.level;
         if (player == null || level == null) {
+            lastHeldLuminance = 0;
+            DynamicLightTracker.onClientTick();
+            flushDirtySections(client);
             DynamicLightTracker.clear();
             return;
         }
@@ -116,11 +122,14 @@ public final class AmbientLuminescenceClient {
                     entityLum = 8;
                 } else if (entity instanceof EndCrystal) {
                     entityLum = 12;
-                } else if (entity instanceof SmallFireball || entity instanceof LargeFireball) {
+                } else if (entity instanceof SmallFireball || entity instanceof LargeFireball
+                        || entity instanceof DragonFireball || entity instanceof WitherSkull) {
                     entityLum = 12;
+                } else if (entity instanceof FireworkRocketEntity) {
+                    entityLum = 11;
                 }
                 if (entity instanceof net.minecraft.world.entity.LivingEntity living) {
-                    boolean mobUnder = underwater && cfg.underwaterFlameExtinguish;
+                    boolean mobUnder = living.isUnderWater() && cfg.underwaterFlameExtinguish;
                     int heldLum = Math.max(
                         Math.max(
                             getStackLuminance(living.getMainHandItem(), mobUnder),
@@ -197,6 +206,14 @@ public final class AmbientLuminescenceClient {
                 }
                 String litVal = stateProps.properties().get("lit");
                 if ("false".equalsIgnoreCase(litVal)) {
+                    return 0;
+                }
+                String chargesVal = stateProps.properties().get("charges");
+                if ("0".equals(chargesVal)) {
+                    return 0;
+                }
+                String waterloggedVal = stateProps.properties().get("waterlogged");
+                if ("false".equalsIgnoreCase(waterloggedVal) && "minecraft:sea_pickle".equals(itemId)) {
                     return 0;
                 }
             }

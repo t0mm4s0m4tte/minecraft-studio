@@ -12,9 +12,11 @@ attribute vec4 at_tangent;
 attribute vec4 mc_midTexCoord;
 attribute vec4 mc_Entity;
 
+uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
+uniform vec3 cameraPosition;
 uniform float frameTimeCounter;
 
 out vec4 vColor;
@@ -56,27 +58,25 @@ void main() {
     }
 
     vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
+    vec4 worldPos = gbufferModelViewInverse * viewPos;
 
     int blockId = int(mc_Entity.x + 0.5);
     vBlockId = blockId;
 
 #ifdef FOLIAGE_WAVING
-    // Micro-waving per foglie, erba e vegetazione organica (ID 10018)
+    // Micro-waving per foglie, erba e vegetazione organica (ID 10018) in Absolute World-Space
     if (blockId == 10018) {
-        vec3 worldApprox = (gbufferModelViewInverse * viewPos).xyz;
+        vec3 worldAbs = worldPos.xyz + cameraPosition;
         float waveSpeed = frameTimeCounter * 2.2;
-        // Oscillazione sinusoidale multi-frequenza ancorata alla posizione mondo
-        float wave = sin(waveSpeed + worldApprox.x * 1.5 + worldApprox.z * 1.2) * 0.035
-                   + cos(waveSpeed * 1.4 + worldApprox.y * 2.0) * 0.02;
-        // Sposta leggermente i vertici in view-space evitando scollamenti alla base
-        viewPos.x += wave * 0.75;
-        viewPos.z += wave * 0.50;
+        float wave = sin(waveSpeed + worldAbs.x * 1.5 + worldAbs.z * 1.2) * 0.035
+                   + cos(waveSpeed * 1.4 + worldAbs.y * 2.0) * 0.02;
+        worldPos.x += wave * 0.75;
+        worldPos.z += wave * 0.50;
+        viewPos = gbufferModelView * worldPos;
     }
 #endif
 
     vViewPos = viewPos.xyz;
-
-    vec4 worldPos = gbufferModelViewInverse * viewPos;
     vWorldPos = worldPos.xyz;
 
     vec4 shadowView = shadowModelView * worldPos;

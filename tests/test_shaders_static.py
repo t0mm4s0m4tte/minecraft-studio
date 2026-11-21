@@ -153,5 +153,20 @@ class TestShadersStatic(unittest.TestCase):
             "composite.fsh must compute view-invariant solar elevation via dot(sunN, upN)"
         )
 
+    def test_absolute_world_waving_water_caustics_and_cavity_ao(self):
+        terrain_vsh = (self.shaders_dir / "gbuffers_terrain.vsh").read_text(encoding="utf-8")
+        shadow_vsh = (self.shaders_dir / "shadow.vsh").read_text(encoding="utf-8")
+        water_fsh = (self.shaders_dir / "gbuffers_water.fsh").read_text(encoding="utf-8")
+        hand_fsh = (self.shaders_dir / "gbuffers_hand.fsh").read_text(encoding="utf-8")
+        entities_fsh = (self.shaders_dir / "gbuffers_entities.fsh").read_text(encoding="utf-8")
+        deferred_fsh = (self.shaders_dir / "deferred.fsh").read_text(encoding="utf-8")
+
+        self.assertIn("worldPos.xyz + cameraPosition", terrain_vsh)
+        self.assertIn("worldPos.xyz + cameraPosition", shadow_vsh)
+        self.assertIn("gbufferModelViewInverse * vec4(sunPosition, 0.0)", water_fsh)
+        self.assertIn("dot(R, upDir)", hand_fsh)
+        self.assertIn("dot(R, upDir)", entities_fsh)
+        self.assertIn("#if AO_QUALITY >= 2", deferred_fsh)
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,6 @@
 # TECHNICAL ARCHITECTURE CONTRACT (TAC) — MINECRAFT STUDIO SUITE
 **Target**: Minecraft Java Edition 1.21.1 (LTS)  
-**Spec Version**: 2.1.0-RELEASE  
+**Spec Version**: 2.2.0-RELEASE  
 **Status**: APPROVED & LOCKED (Single Source of Truth - SSoT)  
 **Maintainers**: Minecraft Studio Core Engineering
 
@@ -79,7 +79,7 @@ Mapping in `shaders/block.properties`:
 ## 4. Module Acceptance & Release Gate Criteria
 1. **Multi-Loader Mod (`ambient-luminescence`)**: `./gradlew build test` (JDK 21) passes across `:common`, `:fabric`, and `:neoforge`, zero loader-specific or client-only leaks in common logic, active Mixin hooks on `LevelRenderer` and Sodium `LightDataAccess`, asynchronous config hot-reload, and zero per-frame heap allocations.
 2. **LabPBR 1.3 Resource Pack (`aetheria-labpbr-32x`)**: Valid `texture.properties` (`format=lab-pbr`), strict compliance across all 1,620 texture sets (4,860 RGBA PNGs) and 54 anti-tiling blockstate JSONs verified via `validate_labpbr.py --strict --all`, plus automated 3x3 and lit contact sheets.
-3. **Deferred Iris Shader Pack (`luminary-shaders` v2.1.0)**: `#version 330 compatibility` pipeline (`shadow` -> `gbuffers_*` -> `deferred` -> `composite` -> `final`), sRGB-to-Linear conversion, LabPBR 1.3 + IPBR fallback, Multi-Scatter GGX energy compensation, world-space foliage shadow synchronization, world-space volumetric light & caustic shafts alignment (`gbufferModelViewInverse`), view-invariant SSR sky fallback (`dot(sunN, upN)`), cotangent 3D normal mapping on hand/entities, rain wetness & splash ripples, world-space Beer-Lambert water with linear depth `-vViewPos.z`, smooth energy-conserving SSR, volumetric clouds & godrays, 5-tap Tent bloom, and AgX / Khronos PBR Neutral tone mapping.
+3. **Deferred Iris Shader Pack (`luminary-shaders` v2.2.0)**: `#version 330 compatibility` pipeline (`shadow` -> `gbuffers_*` -> `deferred` -> `composite` -> `final`), sRGB-to-Linear conversion, LabPBR 1.3 + IPBR fallback, Multi-Scatter GGX energy compensation, absolute world-space foliage shadow synchronization, world-space water caustic solar projection, view-invariant hand and entity environment IBL (`dot(R, normalize(upPosition))`), 8-tap screen cavity AO (`AO_QUALITY >= 2`), cotangent 3D normal mapping on hand/entities, rain wetness & splash ripples, world-space Beer-Lambert water with linear depth `-vViewPos.z`, smooth energy-conserving SSR, volumetric clouds & godrays, 5-tap Tent bloom, and AgX / Khronos PBR Neutral tone mapping.
 4. **Automated Static & Packaging Gate**: 100% pass rate on `python -m unittest discover -s tests -v` (`test_shaders_static`, `test_contact_sheets`, `test_package_release`) and deterministic archive generation in `dist/`.
 
 

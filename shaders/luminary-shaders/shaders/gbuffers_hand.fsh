@@ -15,6 +15,7 @@ uniform sampler2D normals;
 uniform sampler2D specular;
 
 uniform vec3 shadowLightPosition;
+uniform vec3 upPosition;
 uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 
@@ -113,8 +114,9 @@ void main() {
         else                   F0 = linearAlbedo;            // Custom Metal
     }
 
-    if (specSample.a > 0.004 && specSample.a < 0.996) {
-        emissive = specSample.a;
+    float rawEmissive = specSample.a * 255.0;
+    if (rawEmissive >= 1.0 && rawEmissive <= 254.0) {
+        emissive = rawEmissive / 254.0;
     }
 #endif
 
@@ -163,8 +165,9 @@ void main() {
 
     if (smoothness > 0.20 || isMetal > 0.5) {
         vec3 R = reflect(-V, N);
+        vec3 upDir = normalize(upPosition);
         float skyVis = clamp(lm.y * 1.15, 0.20, 1.0);
-        vec3 envSky = mix(vec3(0.15, 0.18, 0.22), vec3(0.70, 0.85, 1.10), clamp(R.y * 0.5 + 0.5, 0.0, 1.0)) * skyVis;
+        vec3 envSky = mix(vec3(0.15, 0.18, 0.22), vec3(0.70, 0.85, 1.10), clamp(dot(R, upDir) * 0.5 + 0.5, 0.0, 1.0)) * skyVis;
         vec3 F_env = F_Schlick(NdotV, F0);
         vec3 metalTint = mix(vec3(1.0), linearAlbedo * 1.15, isMetal);
         specularColor += envSky * F_env * metalTint * pow(smoothness, 1.5) * mix(0.5, 1.0, isMetal) * ao;
