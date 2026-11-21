@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Studio // Trittico Grafico LabPBR 1.3 per Minecraft 1.21.1</title>
+  <meta name="description" content="Vetrina tecnica ufficiale di Minecraft Studio per Minecraft 1.21.1 LTS: Aetheria LabPBR 32x, Luminary Shaders e Ambient Luminescence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0D10;
+      --surface: #12161C;
+      --surface-elevated: #181D25;
+      --surface-hover: #1F2530;
+      --fg: #F3F5F8;
+      --fg-muted: #9BA3B0;
+      --accent: #E5A93C;
+      --accent-hover: #F0B74B;
+      --accent-cyan: #38BDF8;
+      --border-subtle: #232A36;
+      --radius-outer: 16px;
+      --radius-inner: 10px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 0;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    a {
+      color: var(--fg);
+      text-decoration: none;
+      transition: opacity 0.15s ease-out;
+    }
+
+    a:hover {
+      opacity: 0.85;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Top Bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(11, 13, 16, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 16px 0;
+    }
+
+    .topbar-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-tag {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(229, 169, 60, 0.12);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+
+    .nav-links a {
+      color: var(--fg-muted);
+    }
+
+    .nav-links a:hover {
+      color: var(--fg);
+    }
+
+    /* Primary & Secondary Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 10px 18px;
+      border-radius: var(--radius-inner);
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s ease-out, opacity 0.15s ease-out;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0B0D10;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      opacity: 1;
+    }
+
+    .btn-secondary {
+      background: var(--surface-elevated);
+      color: var(--fg);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      opacity: 1;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 48px 0 64px 0;
+    }
+
+    .hero-split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .hero-text {
+      background: var(--surface);
+      padding: 48px;
+      border-radius: var(--radius-outer);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 2.6rem;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+      margin: 0 0 20px 0;
+      color: var(--fg);
+    }
+
+    .lead-copy {
+      color: var(--fg-muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 65ch;
+      margin: 0 0 32px 0;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-visual {
+      background: var(--surface);
+      border-radius: var(--radius-outer);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: var(--radius-outer);
+    }
+
+    /* Section Headings */
+    .section-header {
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.85rem;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      text-wrap: balance;
+      margin: 0 0 8px 0;
+    }
+
+    .section-subtitle {
+      color: var(--fg-muted);
+      font-size: 0.95rem;
+      max-width: 65ch;
+      margin: 0;
+    }
+
+    /* Bento Grid */
+    .bento-section {
+      padding: 32px 0 64px 0;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .bento-card {
+      background: var(--surface);
+      border-radius: var(--radius-outer);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .bento-featured {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .bento-icon-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .bento-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-inner);
+      object-fit: contain;
+      background: var(--surface-elevated);
+      padding: 4px;
+    }
+
+    h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .bento-meta {
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .bento-desc {
+      color: var(--fg-muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--fg);
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .feature-list li::before {
+      content: "✦";
+      color: var(--accent);
+      font-size: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Gallery Section */
+    .gallery-section {
+      padding: 32px 0 64px 0;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .gallery-card {
+      background: var(--surface);
+      border-radius: var(--radius-outer);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .gallery-card-body {
+      padding: 20px 24px;
+    }
+
+    .gallery-caption-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      margin: 0 0 4px 0;
+    }
+
+    .gallery-caption-desc {
+      color: var(--fg-muted);
+      font-size: 0.85rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Profiles Comparison */
+    .profiles-section {
+      padding: 32px 0 64px 0;
+    }
+
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .profile-card {
+      background: var(--surface);
+      border-radius: var(--radius-outer);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .profile-card.active-profile {
+      background: var(--surface-elevated);
+      outline: 2px solid var(--accent);
+    }
+
+    .profile-badge {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    .badge-potato { background: rgba(155, 163, 176, 0.15); color: var(--fg-muted); }
+    .badge-balanced { background: rgba(229, 169, 60, 0.2); color: var(--accent); }
+    .badge-cinematic { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); }
+
+    .profile-latency {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      margin: 0 0 8px 0;
+    }
+
+    .profile-specs {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.84rem;
+      color: var(--fg-muted);
+    }
+
+    /* Checksums & Terminal Section */
+    .checksum-section {
+      padding: 32px 0 80px 0;
+    }
+
+    .checksum-box {
+      background: var(--surface);
+      border-radius: var(--radius-outer);
+      padding: 32px;
+    }
+
+    .checksum-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .checksum-title-group h3 {
+      margin: 0 0 4px 0;
+    }
+
+    .checksum-pre {
+      background: #07090C;
+      border-radius: var(--radius-inner);
+      padding: 20px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #CAD5E2;
+      overflow-x: auto;
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .checksum-hash {
+      color: var(--accent-cyan);
+    }
+
+    .checksum-file {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--surface);
+      padding: 40px 0;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: var(--fg-muted);
+    }
+
+    .footer-links a:hover {
+      color: var(--fg);
+    }
+
+    @media (max-width: 900px) {
+      .hero-split {
+        grid-template-columns: 1fr;
+      }
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .bento-featured {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+      }
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+      .profiles-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .btn:active {
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="container topbar-content">
+      <div class="brand-title">
+        <span>MINECRAFT STUDIO</span>
+        <span class="brand-tag">v2.2.0 LTS</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#architettura">Architettura</a>
+        <a href="#visual-qa">Visual QA</a>
+        <a href="#profili">Profili GPU</a>
+        <a href="#sha256">SHA-256</a>
+      </nav>
+      <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/Minecraft-Studio-Triptych-2.2.0.mrpack" class="btn btn-primary">
+        Scarica Bundle .mrpack (v2.2.0)
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container hero-split">
+        <div class="hero-text">
+          <div class="eyebrow">Gold Master Release // Minecraft 1.21.1</div>
+          <h1>Il Trittico Grafico LabPBR 1.3 per Minecraft 1.21.1.</h1>
+          <p class="lead-copy">
+            1.620 asset 32x validati al pixel, illuminazione dinamica zero-allocation per Fabric & NeoForge e pipeline Iris Deferred da 3.8 ms a 1440p.
+          </p>
+          <div class="hero-ctas">
+            <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/Minecraft-Studio-Triptych-2.2.0.mrpack" class="btn btn-primary">
+              Scarica Bundle 1-Click .mrpack
+            </a>
+            <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/tag/v2.2.0" class="btn btn-secondary">
+              Vedi Release GitHub v2.2.0
+            </a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img src="branding/minecraft_studio_hero_banner.png" alt="Minecraft Studio Banner LabPBR 1.3">
+        </div>
+      </div>
+    </section>
+
+    <!-- Bento Modules -->
+    <section id="architettura" class="bento-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="eyebrow">I Tre Moduli Sinergici</div>
+          <h2>Architettura Software Tripartita</h2>
+          <p class="section-subtitle">
+            Ogni componente è progettato in isolamento e integrato a livello fotometrico senza sprechi di memoria o discrepanze di shading.
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Featured: Luminary Shaders -->
+          <div class="bento-card bento-featured">
+            <div>
+              <div class="bento-icon-title">
+                <img src="branding/luminary_shaders_logo_512.png" alt="Luminary Shaders" class="bento-logo">
+                <div>
+                  <div class="bento-meta">Shader Pack // Iris / Oculus</div>
+                  <h3>Luminary Shaders v2.2.0</h3>
+                </div>
+              </div>
+              <p class="bento-desc">
+                Pipeline deferred GLSL #version 330 compatibility con Multi-Scatter GGX per conservazione di energia sui metalli, assorbimento volumetrico di Beer-Lambert e caustiche animate orientate astronomicamente.
+              </p>
+              <div class="card-actions">
+                <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/Luminary-Shaders-2.2.0.zip" class="btn btn-primary">
+                  Scarica Shader Pack (.zip)
+                </a>
+              </div>
+            </div>
+            <div>
+              <ul class="feature-list">
+                <li>Absolute World-Space Foliage Waving sincronizzato al fotogramma con lo shadow pass.</li>
+                <li>View-Invariant Hand & Entity IBL isolato dal rollio della telecamera.</li>
+                <li>8-Tap Screen Cavity Ambient Occlusion per profondità e micro-rilievi.</li>
+                <li>Target rigoroso frame time &le; 3.8 ms su profilo Balanced a 1440p.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Aetheria LabPBR -->
+          <div class="bento-card">
+            <div>
+              <div class="bento-icon-title">
+                <img src="branding/aetheria_labpbr_logo_512.png" alt="Aetheria LabPBR" class="bento-logo">
+                <div>
+                  <div class="bento-meta">Resource Pack // 32x LabPBR 1.3</div>
+                  <h3>Aetheria LabPBR 32x v2.2.0</h3>
+                </div>
+              </div>
+              <p class="bento-desc">
+                1.620 set di texture per blocco (4.860 PNG) con canali rigorosi LabPBR 1.3: normali tangenti, occlusione ambientale, altezze POM, rugosità, F0 e scattering sub-superficiale.
+              </p>
+              <ul class="feature-list">
+                <li>100% copertura Minecraft 1.21.1 incluse tutte le varianti Trial Chambers.</li>
+                <li>54 blockstate anti-tiling con rotazioni casuali pesate.</li>
+                <li>Zero artefatti di quantizzazione o sfarfallio tra canali.</li>
+              </ul>
+            </div>
+            <div class="card-actions">
+              <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/Aetheria-LabPBR-32x-2.2.0.zip" class="btn btn-primary">
+                Scarica Resource Pack (.zip)
+              </a>
+            </div>
+          </div>
+
+          <!-- Ambient Luminescence -->
+          <div class="bento-card">
+            <div>
+              <div class="bento-icon-title">
+                <img src="branding/ambient_luminescence_logo_512.png" alt="Ambient Luminescence" class="bento-logo">
+                <div>
+                  <div class="bento-meta">Mod Luce Dinamica // Java 21</div>
+                  <h3>Ambient Luminescence v2.2.0</h3>
+                </div>
+              </div>
+              <p class="bento-desc">
+                Motore di illuminazione dinamica a zero allocazioni su heap durante il rendering dei chunk, basato su Look-Up Table (LUT) euclidea e compatibile con Fabric e NeoForge.
+              </p>
+              <ul class="feature-list">
+                <li>Trial Chambers 1.21.1: Copper Bulbs ossidabili, Vault e Crafter attivi.</li>
+                <li>Underwater Flame Rules: gestione spegnimento/attenuazione fluidi.</li>
+                <li>Hot-reload asincrono della configurazione JSON senza riavvio.</li>
+              </ul>
+            </div>
+            <div class="card-actions">
+              <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/ambient_luminescence-fabric-2.2.0.jar" class="btn btn-primary">
+                Scarica Fabric (.jar)
+              </a>
+              <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/download/v2.2.0/ambient_luminescence-neoforge-2.2.0.jar" class="btn btn-secondary">
+                Scarica NeoForge (.jar)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual QA Gallery -->
+    <section id="visual-qa" class="gallery-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="eyebrow">Validazione Visiva & Risoluzione</div>
+          <h2>Visual QA & Risultati di Rendering</h2>
+          <p class="section-subtitle">
+            Campionamenti diretti dai test di regressione ottica eseguiti sulla suite di certificazione Gold Master.
+          </p>
+        </div>
+
+        <div class="gallery-grid">
+          <div class="gallery-card">
+            <img src="branding/aetheria_32x_showcase_grid.png" alt="Aetheria 32x Showcase Grid">
+            <div class="gallery-card-body">
+              <div class="gallery-caption-title">Griglia Campionaria Aetheria 32x</div>
+              <p class="gallery-caption-desc">Confronto albedo e resa in-game di minerali, rocce sedimentarie e metalli cesellati.</p>
+            </div>
+          </div>
+
+          <div class="gallery-card">
+            <img src="branding/labpbr_channel_breakdown.png" alt="LabPBR Channel Breakdown">
+            <div class="gallery-card-body">
+              <div class="gallery-caption-title">Scomposizione Canali LabPBR 1.3</div>
+              <p class="gallery-caption-desc">Canale Albedo, mappa Normal/AO/Height (_n) e mappa Smoothness/F0/SSS/Emissive (_s).</p>
+            </div>
+          </div>
+
+          <div class="gallery-card">
+            <img src="branding/contact_sheet_3x3.png" alt="Contact Sheet 3x3 Seamless">
+            <div class="gallery-card-body">
+              <div class="gallery-caption-title">Verifica Seamless 3x3 Blockstate</div>
+              <p class="gallery-caption-desc">Assenza totale di cuciture o artefatti di confine tra le celle contigue a 32 pixel.</p>
+            </div>
+          </div>
+
+          <div class="gallery-card">
+            <img src="branding/contact_sheet_lit.png" alt="Contact Sheet Lit Shading">
+            <div class="gallery-card-body">
+              <div class="gallery-caption-title">Interazione Fotometrica Differita</div>
+              <p class="gallery-caption-desc">Risposta delle superfici microfaccettate illuminate dalla pipeline Luminary GGX.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GPU Profiles -->
+    <section id="profili" class="profiles-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="eyebrow">Benchmark & Scalabilità</div>
+          <h2>Profili Prestazionali Luminary</h2>
+          <p class="section-subtitle">
+            Ottimizzato sia per schede grafiche integrate che per configurazioni desktop da gioco competitive.
+          </p>
+        </div>
+
+        <div class="profiles-grid">
+          <!-- Potato -->
+          <div class="profile-card">
+            <div>
+              <span class="profile-badge badge-potato">GPU Integrate</span>
+              <div class="profile-latency">&lt; 1.2 ms</div>
+              <h3>Profilo Potato</h3>
+              <p class="bento-desc">Massime prestazioni per laptop e APU senza rinunciare a tonemapping e riflessioni base.</p>
+            </div>
+            <ul class="profile-specs">
+              <li>Shadows: 1024x buffer semplificato</li>
+              <li>Water: Rifrazione standard</li>
+              <li>POM: Disattivato</li>
+              <li>Cavity AO: Off</li>
+            </ul>
+          </div>
+
+          <!-- Balanced (Default) -->
+          <div class="profile-card active-profile">
+            <div>
+              <span class="profile-badge badge-balanced">Predefinito // Consigliato</span>
+              <div class="profile-latency">&le; 3.8 ms</div>
+              <h3>Profilo Balanced</h3>
+              <p class="bento-desc">Punto di equilibrio perfetto per monitor 144Hz/240Hz a 1080p e 1440p con PBR completo.</p>
+            </div>
+            <ul class="profile-specs">
+              <li>Shadows: 2048x con World Foliage Sync</li>
+              <li>Water: Beer-Lambert + Caustiche solari</li>
+              <li>POM: 10-Step Adaptive Raymarching</li>
+              <li>Cavity AO: 8-Tap lineare attivo</li>
+            </ul>
+          </div>
+
+          <!-- Cinematic -->
+          <div class="profile-card">
+            <div>
+              <span class="profile-badge badge-cinematic">Massima Fedeltà</span>
+              <div class="profile-latency">&le; 6.5 ms</div>
+              <h3>Profilo Cinematic</h3>
+              <p class="bento-desc">Risoluzione estrema per screenshot, cinematografiche e display ad altissima risoluzione.</p>
+            </div>
+            <ul class="profile-specs">
+              <li>Shadows: 4096x Soft Shadow filtering</li>
+              <li>SSR: 24-Step Energy-Conserving Trace</li>
+              <li>POM: 16-Step Parallax Occlusion</li>
+              <li>Atmosphere: Volumetric Godrays completi</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checksum Verification Box -->
+    <section id="sha256" class="checksum-section">
+      <div class="container">
+        <div class="checksum-box">
+          <div class="checksum-header">
+            <div class="checksum-title-group">
+              <div class="eyebrow">Sicurezza & Autenticità</div>
+              <h3>Verifica Integrità SHA-256</h3>
+              <p class="section-subtitle">Confronta gli hash crittografici dei file scaricati con i checksum generati in pipeline:</p>
+            </div>
+            <button id="copy-checksums-btn" class="btn btn-secondary">
+              Copia SHA256SUMS
+            </button>
+          </div>
+          <pre class="checksum-pre"><code><span class="checksum-hash">4156e03e4862a744c4b7129e7e0789e1087f012805e282ceb30a7b5c5e2466c3</span>  <span class="checksum-file">Aetheria-LabPBR-32x-2.2.0.zip</span>
+<span class="checksum-hash">fbbe91490d426df69cd1d92578e1892c97cb26954d2066d9addceadc194b518a</span>  <span class="checksum-file">ambient_luminescence-fabric-2.2.0.jar</span>
+<span class="checksum-hash">e4a5a95e9841cbadf28396441b022e1b690a8160bf1307e76bbbb858d3e4f50a</span>  <span class="checksum-file">ambient_luminescence-neoforge-2.2.0.jar</span>
+<span class="checksum-hash">aacec09aa5f20adb900fe94181f5387b2d1ac3b46bd1adbff401659ef9e7c727</span>  <span class="checksum-file">Luminary-Shaders-2.2.0.zip</span>
+<span class="checksum-hash">b8c8b664e08fccabcbd67cdaef939d3fdfe3690588488d74bbfe889996ab0da5</span>  <span class="checksum-file">Minecraft-Studio-Triptych-2.2.0.mrpack</span></code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <div>
+        <strong>Minecraft Studio — Synergic Triptych</strong> // Rilascio v2.2.0 LTS distribuito con Licenza MIT.
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/t0mm4s0m4tte/minecraft-studio">Repository GitHub</a>
+        <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/releases/tag/v2.2.0">Note di Rilascio</a>
+        <a href="https://github.com/t0mm4s0m4tte/minecraft-studio/blob/master/LICENSE">Licenza MIT</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const checksumsRaw = `4156e03e4862a744c4b7129e7e0789e1087f012805e282ceb30a7b5c5e2466c3  Aetheria-LabPBR-32x-2.2.0.zip
+fbbe91490d426df69cd1d92578e1892c97cb26954d2066d9addceadc194b518a  ambient_luminescence-fabric-2.2.0.jar
+e4a5a95e9841cbadf28396441b022e1b690a8160bf1307e76bbbb858d3e4f50a  ambient_luminescence-neoforge-2.2.0.jar
+aacec09aa5f20adb900fe94181f5387b2d1ac3b46bd1adbff401659ef9e7c727  Luminary-Shaders-2.2.0.zip
+b8c8b664e08fccabcbd67cdaef939d3fdfe3690588488d74bbfe889996ab0da5  Minecraft-Studio-Triptych-2.2.0.mrpack`;
+
+    const copyBtn = document.getElementById('copy-checksums-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(checksumsRaw).then(function() {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Copiato ✓';
+          setTimeout(function() {
+            copyBtn.textContent = originalText;
+          }, 2000);
+        }).catch(function() {
+          copyBtn.textContent = 'Errore copia';
+        });
+      });
+    }
+  </script>
+</body>
+</html>

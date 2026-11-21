@@ -79,6 +79,72 @@ class TestPackageRelease(unittest.TestCase):
                 self.assertIn("shaders/shaders.properties", names)
                 self.assertIn("shaders/lib/settings.glsl", names)
 
+            mrpack = out / "Minecraft-Studio-Triptych-1.0.0.mrpack"
+            sha256sums = out / "SHA256SUMS.txt"
+            self.assertTrue(mrpack.is_file())
+            self.assertTrue(sha256sums.is_file())
+
+            with zipfile.ZipFile(mrpack) as zf:
+                mr_names = set(zf.namelist())
+                self.assertIn("modrinth.index.json", mr_names)
+                self.assertIn("overrides/resourcepacks/Aetheria-LabPBR-32x-1.0.0.zip", mr_names)
+                self.assertIn("overrides/shaderpacks/Luminary-Shaders-1.0.0.zip", mr_names)
+                self.assertIn("overrides/mods/ambient_luminescence-fabric-1.0.0.jar", mr_names)
+                index_meta = json.loads(zf.read("modrinth.index.json").decode("utf-8"))
+                self.assertEqual(index_meta["versionId"], "1.0.0")
+                self.assertEqual(index_meta["dependencies"]["minecraft"], "1.21.1")
+
+            sums_text = sha256sums.read_text(encoding="utf-8")
+            self.assertIn("Aetheria-LabPBR-32x-1.0.0.zip", sums_text)
+            self.assertIn("Luminary-Shaders-1.0.0.zip", sums_text)
+            self.assertIn("Minecraft-Studio-Triptych-1.0.0.mrpack", sums_text)
+
+    def test_mrpack_bundle_and_sha256sums_generation(self):
+        from package_release import build_release
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            out = Path(tmp) / "dist"
+
+            pack_dir = root / "packs" / "aetheria-labpbr-32x"
+            (pack_dir / "assets" / "minecraft" / "textures" / "block").mkdir(parents=True)
+            (pack_dir / "pack.mcmeta").write_text('{"pack": {"pack_format": 34}}', encoding="utf-8")
+            (pack_dir / "assets" / "minecraft" / "textures" / "block" / "stone.png").write_bytes(b"PNG")
+
+            shader_dir = root / "shaders" / "luminary-shaders" / "shaders"
+            shader_dir.mkdir(parents=True)
+            (shader_dir / "shaders.properties").write_text("pbr.format = lab_pbr_1_3\n", encoding="utf-8")
+
+            mod_dir = root / "mods" / "ambient-luminescence"
+            (mod_dir / "fabric" / "build" / "libs").mkdir(parents=True)
+            (mod_dir / "fabric" / "build" / "libs" / "fabric-2.2.0.jar").write_bytes(b"FABRIC")
+
+            artifacts = build_release(
+                root_dir=root,
+                output_dir=out,
+                version="2.2.0",
+                skip_gradle=True,
+                skip_validate=True,
+            )
+
+            mrpack = artifacts["mrpack_bundle"]
+            sha256sums = artifacts["sha256sums"]
+            self.assertTrue(mrpack.is_file())
+            self.assertTrue(sha256sums.is_file())
+            self.assertEqual(mrpack.name, "Minecraft-Studio-Triptych-2.2.0.mrpack")
+
+            with zipfile.ZipFile(mrpack) as zf:
+                mr_names = set(zf.namelist())
+                self.assertIn("modrinth.index.json", mr_names)
+                self.assertIn("overrides/resourcepacks/Aetheria-LabPBR-32x-2.2.0.zip", mr_names)
+                self.assertIn("overrides/shaderpacks/Luminary-Shaders-2.2.0.zip", mr_names)
+                self.assertIn("overrides/mods/ambient_luminescence-fabric-2.2.0.jar", mr_names)
+
+            sums = sha256sums.read_text(encoding="utf-8")
+            self.assertIn("Minecraft-Studio-Triptych-2.2.0.mrpack", sums)
+            self.assertIn("Aetheria-LabPBR-32x-2.2.0.zip", sums)
+            self.assertIn("Luminary-Shaders-2.2.0.zip", sums)
+
     def test_real_repo_release_validation_and_zips(self):
         from package_release import build_release
 
